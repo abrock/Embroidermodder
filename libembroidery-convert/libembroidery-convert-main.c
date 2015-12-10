@@ -210,6 +210,24 @@ int countStitches(struct EmbStitchList_ * const start) {
     return counter;
 }
 
+/**
+ * Count the number of normal stitches until the end of a list.
+ *
+ * @param start The beginning of a list or some stitch in the middle if you want to start counting in the middle.
+ * @return The number of normal stitches including the start.
+ */
+int countNormalStitches(struct EmbStitchList_ * const start) {
+    struct EmbStitchList_ * current = start;
+    int counter = 0;
+    while (0 != current) {
+        if (NORMAL == current->stitch.flags) {
+            counter++;
+        }
+        current = current->next;
+    }
+    return counter;
+}
+
 /** This function deletes stitches from an EmbPattern such that the resulting pattern does not contain any stitches shorter than a given threshold.
  * @param p The pattern which might contain very short stitches. These stitches are removed.
  * @param threshold The minimum stitch length to be enforced.
@@ -345,20 +363,119 @@ int isSatinArea(struct EmbStitchList_ * const start, const double minSatinLength
     return true;
 }
 
+/**
+ * Calculate the mean position of two stitches and store the result in a third stitch.
+ *
+ * @param result The result of the cacluation.
+ * @param a One of the two stitches for which the mean should be calculated.
+ * @param b The other of the two stitches.
+ */
+void calculateMean(struct EmbStitchList_* result, const struct EmbStitchList_* a, const struct EmbStitchList_* b) {
+    result->stitch.xx = (a->stitch.xx + b->stitch.xx)/2;
+    result->stitch.yy = (a->stitch.yy + b->stitch.yy)/2;
+}
+
+/**
+ * Given two stitches move both of them closer to each other by a certain distance.
+ *
+ * @param a Stitch a.
+ * @param b Stitch b.
+ * @param distance Both stitches are moved by this distance.
+ */
+void moveCloser(struct EmbStitchList_* a, struct EmbStitchList_* b, const double dist) {
+    double dist_b_a = distance(b,a);
+    const double b_a_xx = b->stitch.xx - a->stitch.xx;
+    const double b_a_yy = b->stitch.yy - a->stitch.yy;
+    
+    a->stitch.xx += b_a_xx * dist / dist_b_a;
+    a->stitch.yy += b_a_yy * dist / dist_b_a;
+    
+    b->stitch.xx -= b_a_xx * dist / dist_b_a;
+    b->stitch.yy -= b_a_yy * dist / dist_b_a;
+}
+
+/**
+ * Allocate memory for a stitch and clone the position, color and flags content.
+ *
+ *
+ */
+struct EmbStitchList_* clone(const struct EmbStitchList_* x) {
+    struct EmbStitchList_* result = malloc(sizeof *result);
+    result->stitch.xx = x->stitch.xx;
+    result->stitch.yy = x->stitch.yy;
+    result->stitch.flags = x->stitch.flags;
+    result->stitch.color = x->stitch.color;
+}
+
 struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance) {
     const int flags = start->stitch.flags;
     const int color = start->stitch.color;
+    struct EmbStitchList_* firstOpposing; 
+    struct EmbStitchList_* lastAdjacent; 
+    struct EmbStitchList_* prevOpposing;
+    struct EmbStitchList_* prevAdjacent;
+    struct EmbStitchList_* newOpposing;
+    struct EmbStitchList_* newAdjacent;
+    struct EmbStitchList_* satinAreaBeginning = start->next; 
     int satinAreaLength = 0;
     struct EmbStitchList_* currentStitch = start;
-    if (0 == start || 0 == start->next || 0 == start->next->next || 0 == start->next->next->next) {
+    int addedStitches = 0;
+    if (0 == start || 0 == start->next || 0 == start->next->next || 0 == start->next->next->next || !isSatinStitch(currentStitch, minSatinLength, maxAngle)) {
         return start;
     }
+    firstOpposing = clone(currentStitch);
+    calculateMean(firstOpposing, currentStitch->next, currentStitch->next->next->next);
+    
+    lastAdjacent = clone(currentStitch);
+    calculateMean(lastAdjacent, currentStitch, currentStitch->next->next);
+
+    moveCloser(firstOpposing, lastAdjacent, safetyDistance);
+
+    lastAdjacent->next = clone(firstOpposing);
+    lastAdjacent->next->next = satinAreaBeginning;
+
+    prevOpposing = firstOpposing;
+    prevAdjacent = lastAdjacent;
+    
+    newOpposing = clone(prevOpposing);
+    newAdjacent = clone(prevAdjacent);
+
     while (isSatinStitch(currentStitch, minSatinLength, maxAngle) && color == currentStitch->stitch.color) {
-        currentStitch = currentStitch->next;
-        satinAreaLength++;
+        calculateMean(newOpposing, currentStitch->next, currentStitch->next->next->next);
+        calculateMean(newAdjacent, currentStitch, currentStitch->next->next);
+        moveCloser(newOpposing, newAdjacent, safetyDistance);
+        if (distance(newOpposing, prevOpposing) > minStitchLength) {
+            prevOpposing->next = newOpposing;
+            prevOpposing = newOpposing;
+            newOpposing = clone(newOpposing);   
+            addedStitches++;
+        }
+        if (distance(newAdjacent, prevAdjacent) > minStitchLength) {
+            newAdjacent->next = prevAdjacent;
+            prevAdjacent = newAdjacent;
+            newAdjacent = clone(newAdjacent);
+            addedStitches++;
+        }
+        calculateMean(newOpposing, currentStitch->next, currentStitch->next->next->next);
+        calculateMean(newAdjacent, currentStitch, currentStitch->next->next);
+        moveCloser(newOpposing, newAdjacent, safetyDistance);
+
+
+        currentStitch = currentStitch->next->next;
+        satinAreaLength += 2;
     }
+    /* Add the final stitches. Don't care about their length, if they are too short they will be automatically deleted by the optimizer */
+    prevOpposing->next = newOpposing;
+    prevOpposing = newOpposing;
+    newAdjacent->next = prevAdjacent;
+    prevAdjacent = newAdjacent;
+    addedStitches += 5;
+
+    /* Finally stitch the beginning and end together */
+    start->next = firstOpposing;
+    prevOpposing->next = prevAdjacent;
            
-    printf("Found satin area of length %d\n", satinAreaLength);
+    printf("Found satin area of length %d, added %d stitches\n", satinAreaLength, addedStitches);
 
     return currentStitch;
 }
@@ -394,6 +511,9 @@ int main(int argc, const char* argv[])
     EmbPattern* p = 0;
     int successful = 0, i = 0;
     int formatType;
+    int normalStitches1 = 0;
+    int normalStitches2 = 0;
+    int normalStitches3 = 0;
     const double threshold = 0.7;
 #ifdef SHORT_WAY
     if(argc < 3)
@@ -415,15 +535,24 @@ int main(int argc, const char* argv[])
 
     /* Add under sewing to satin areas */
 
+    normalStitches1 = countNormalStitches(p->stitchList);
+
     printf("\nAdding under sewing to satin areas\n");
     /* Paramters: Pattern, minStitchLength, minSatinLength, minSatinCount, maxAngle, safetyDistance */
-    addUnderSewing(p,      1.5,             1.0,            5,             10,        0.2);
+    addUnderSewing(p,      1.5,             1.0,            5,             20,        0.4);
+
+    normalStitches2 = countNormalStitches(p->stitchList);
+    printf("\nIn total %d stitches were added\n", normalStitches2-normalStitches1);
+
 
 #define SIMPLIFY 1
 #if SIMPLIFY
     /* Remove stitches shorter than threshold. */
     printf("\nAttempting to remove very short stitches\n");
     removeSmallStitches(p, threshold);
+
+    normalStitches3 = countNormalStitches(p->stitchList);
+    printf("\nIn total %d stitches were removed (or added of the number is negative)\n", normalStitches1 - normalStitches3);
 
     /*
     printf("\nAttempting to simplify straight lines\n");
