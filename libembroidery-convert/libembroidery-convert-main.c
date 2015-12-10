@@ -5,6 +5,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
+#define false 0
+#define true 1
+
+#ifndef M_PI
+#define M_PI           3.14159265358979323846
+#endif
 
 void usage(void)
 {
@@ -186,6 +194,22 @@ void simplifyStraightLines(EmbPattern* p, const double maxErr, const double maxL
 
 }
 
+/**
+ * Count the number of stitches until the end of a list.
+ *
+ * @param start The beginning of a list or some stitch in the middle if you want to start counting in the middle.
+ * @return The number of stitches including the start.
+ */
+int countStitches(struct EmbStitchList_ * const start) {
+    struct EmbStitchList_ * current = start;
+    int counter = 0;
+    while (0 != current) {
+        counter++;
+        current = current->next;
+    }
+    return counter;
+}
+
 /** This function deletes stitches from an EmbPattern such that the resulting pattern does not contain any stitches shorter than a given threshold.
  * @param p The pattern which might contain very short stitches. These stitches are removed.
  * @param threshold The minimum stitch length to be enforced.
@@ -247,6 +271,124 @@ void removeSmallStitches(EmbPattern* p, const double threshold) {
     printf("Stiches: %d\nNormal stitches: %d\nRemoved: %d\n", stitchCounter, normalStitchCounter, removedCounter);
 }
 
+/**
+ * Compute the angle between two consecutive lines given by three consecutive stitches.
+ *
+ * @param x The first of the three consecutive stitches which should be considered.
+ * @return the angle between the stitches in degree. Angles smaller than 90° mean that the motive changes direction, very small angles are a sign for a area filled by satin stitches.
+ */
+double angle(const struct EmbStitchList_* x) {
+    double dx1, dx2, dy1, dy2, cosalpha;
+    if (0 == x || 0 == x->next || 0 == x->next->next) {
+        return 0;
+    }
+
+    dx1 = x->stitch.xx - x->next->stitch.xx;
+    dy1 = x->stitch.yy - x->next->stitch.yy;
+
+    dx2 = x->next->next->stitch.xx - x->next->stitch.xx;
+    dy2 = x->next->next->stitch.yy - x->next->stitch.yy;
+
+    cosalpha = (dx1 * dx2 + dy1 * dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2));
+
+    return acos(cosalpha)/M_PI*180;
+}
+
+/** Detects if the current stitch is a satin stitch by testing the length of the stitch and the next stitch and computing the angle.
+ *
+ * @param x The stitch where the test should start. This and the two successors are considered in this function.
+ * @param minSatinLength The minimum length for the detection of satin stitches.
+ * @param maxAngle Maximum angle in degree between two stitches for the detection of satin stitches
+ */
+int isSatinStitch(const struct EmbStitchList_* x, const double minSatinLength, const double maxAngle) {
+    if (0 == x || 0 == x->next || 0 == x->next->next) {
+        return false;
+    }
+
+    if (NORMAL != x->stitch.flags || NORMAL != x->next->stitch.flags || NORMAL != x->next->next->stitch.flags) {
+        return false;
+    }
+
+    if (distance(x, x->next) < minSatinLength || distance (x->next, x->next->next) < minSatinLength) {
+        return false;
+    }
+
+    if (abs(angle(x)) > maxAngle) {
+        return false;
+    }
+    if (x->stitch.color != x->next->stitch.color || x->stitch.color != x->next->next->stitch.color) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Check if the current stitch marks the beginning (or middle) of a area filled by satin stitches.
+ *
+ * @param start The stitch where the testing should start. This and the following minSatinCount + 2 Stitches are considered in the test.
+ * @param minSatinLength The minimum length for the detection of satin stitches.
+ * @param minSatinCount The minimum number of consecutive satin stitches for the detection of a area filled by satin stitches
+ * @param maxAngle Maximum angle in degree between two stitches for the detection of satin stitches
+ */
+int isSatinArea(struct EmbStitchList_ * const start, const double minSatinLength, const int minSatinCount, const double maxAngle) {
+    struct EmbStitchList_* current = start;
+    int ii = 0;
+    const int flags = start->stitch.flags;
+    const int color = start->stitch.color;
+    for (ii = 1; ii < minSatinCount; ++ii) {
+        if (0 == current || !isSatinStitch(current, minSatinLength, maxAngle) || color != current->stitch.color || flags != current->stitch.flags) {
+            return false;
+        }
+        current = current->next;
+    }
+    return true;
+}
+
+struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance) {
+    const int flags = start->stitch.flags;
+    const int color = start->stitch.color;
+    int satinAreaLength = 0;
+    struct EmbStitchList_* currentStitch = start;
+    if (0 == start || 0 == start->next || 0 == start->next->next || 0 == start->next->next->next) {
+        return start;
+    }
+    while (isSatinStitch(currentStitch, minSatinLength, maxAngle) && color == currentStitch->stitch.color) {
+        currentStitch = currentStitch->next;
+        satinAreaLength++;
+    }
+           
+    printf("Found satin area of length %d\n", satinAreaLength);
+
+    return currentStitch;
+}
+
+/**
+ * Adds under sewing to the parts of a pattern where satin stich (zick-zack) is used.
+ *
+ * @param p Pattern to which the under sewing should be added.
+ * @param minStitchLength The minimum stitch length which should be used for under sewing.
+ * @param minSatinLength The minimum length for the detection of satin stitches.
+ * @param minSatinCount The minimum number of consecutive satin stitches for the detection of a area filled by satin stitches
+ * @param maxAngle Maximum angle in degree between two stitches for the detection of satin stitches
+ * @param safetyDistance The desired distance between the satin stitches and the under sewing lines.
+ */
+void addUnderSewing(EmbPattern* p, const double minStitchLength, const double minSatinLength, const int minSatinCount, const double maxAngle, const double safetyDistance) {
+    struct EmbStitchList_ * currentStitch = p->stitchList;
+    const int totalStitchCount = countStitches(p->stitchList);
+    
+    struct EmbStitchList_ * listMemory = malloc(sizeof *listMemory);
+
+    while (0 != currentStitch) {
+        if (isSatinArea(currentStitch, minSatinLength, minSatinCount, maxAngle)) {
+            currentStitch = addSingleUnderSewing(currentStitch, minStitchLength, minSatinLength, maxAngle, safetyDistance);
+        }
+
+        currentStitch = currentStitch->next;
+    }
+
+}
+
 int main(int argc, const char* argv[])
 {
     EmbPattern* p = 0;
@@ -270,6 +412,12 @@ int main(int argc, const char* argv[])
         embPattern_free(p);
         exit(1);
     }
+
+    /* Add under sewing to satin areas */
+
+    printf("\nAdding under sewing to satin areas\n");
+    /* Paramters: Pattern, minStitchLength, minSatinLength, minSatinCount, maxAngle, safetyDistance */
+    addUnderSewing(p,      1.5,             1.0,            5,             10,        0.2);
 
 #define SIMPLIFY 1
 #if SIMPLIFY
