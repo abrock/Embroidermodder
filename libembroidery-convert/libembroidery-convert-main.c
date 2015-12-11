@@ -190,7 +190,7 @@ void simplifyStraightLines(EmbPattern* p, const double maxErr, const double maxL
         currentStitch = currentStitch->next;
         stitchCounter++;
     }
-    printf("Stiches: %d\nNormal stitches: %d\nRemoved: %d\n", stitchCounter, normalStitchCounter, removedCounter);
+    printf("Stitches: %d\nNormal stitches: %d\nRemoved: %d\n", stitchCounter, normalStitchCounter, removedCounter);
 
 }
 
@@ -286,7 +286,7 @@ void removeSmallStitches(EmbPattern* p, const double threshold) {
         stitchCounter++;
         currentStitch = currentStitch->next;
     }
-    printf("Stiches: %d\nNormal stitches: %d\nRemoved: %d\n", stitchCounter, normalStitchCounter, removedCounter);
+    printf("Stitches: %d\nNormal stitches: %d\nRemoved: %d\n", stitchCounter, normalStitchCounter, removedCounter);
 }
 
 /**
@@ -407,7 +407,7 @@ struct EmbStitchList_* clone(const struct EmbStitchList_* x) {
     result->stitch.color = x->stitch.color;
 }
 
-struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance) {
+struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance, int * addedStitches, int * satinAreaLength) {
     const int flags = start->stitch.flags;
     const int color = start->stitch.color;
     struct EmbStitchList_* firstOpposing; 
@@ -417,9 +417,9 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
     struct EmbStitchList_* newOpposing;
     struct EmbStitchList_* newAdjacent;
     struct EmbStitchList_* satinAreaBeginning = start->next; 
-    int satinAreaLength = 0;
     struct EmbStitchList_* currentStitch = start;
-    int addedStitches = 0;
+    (*satinAreaLength) = 0;
+    *addedStitches = 0;
     if (0 == start || 0 == start->next || 0 == start->next->next || 0 == start->next->next->next || !isSatinStitch(currentStitch, minSatinLength, maxAngle)) {
         return start;
     }
@@ -448,13 +448,13 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
             prevOpposing->next = newOpposing;
             prevOpposing = newOpposing;
             newOpposing = clone(newOpposing);   
-            addedStitches++;
+            (*addedStitches)++;
         }
         if (distance(newAdjacent, prevAdjacent) > minStitchLength) {
             newAdjacent->next = prevAdjacent;
             prevAdjacent = newAdjacent;
             newAdjacent = clone(newAdjacent);
-            addedStitches++;
+            (*addedStitches)++;
         }
         calculateMean(newOpposing, currentStitch->next, currentStitch->next->next->next);
         calculateMean(newAdjacent, currentStitch, currentStitch->next->next);
@@ -462,20 +462,20 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
 
 
         currentStitch = currentStitch->next->next;
-        satinAreaLength += 2;
+        (*satinAreaLength) += 2;
     }
     /* Add the final stitches. Don't care about their length, if they are too short they will be automatically deleted by the optimizer */
     prevOpposing->next = newOpposing;
     prevOpposing = newOpposing;
     newAdjacent->next = prevAdjacent;
     prevAdjacent = newAdjacent;
-    addedStitches += 5;
+    (*addedStitches) += 5;
 
     /* Finally stitch the beginning and end together */
     start->next = firstOpposing;
     prevOpposing->next = prevAdjacent;
            
-    printf("Found satin area of length %d, added %d stitches\n", satinAreaLength, addedStitches);
+    printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
 
     return currentStitch;
 }
@@ -493,16 +493,30 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
 void addUnderSewing(EmbPattern* p, const double minStitchLength, const double minSatinLength, const int minSatinCount, const double maxAngle, const double safetyDistance) {
     struct EmbStitchList_ * currentStitch = p->stitchList;
     const int totalStitchCount = countStitches(p->stitchList);
-    
+    int addedStitches = 0;
+    int satinAreaLength = 0;
+    int satinAreaCount = 0;
+    double stitchSum = 0;
+    double stitchSquareSum = 0;
+    double lengthSum = 0;
+    double lengthSquareSum = 0;
+
     struct EmbStitchList_ * listMemory = malloc(sizeof *listMemory);
 
     while (0 != currentStitch) {
         if (isSatinArea(currentStitch, minSatinLength, minSatinCount, maxAngle)) {
-            currentStitch = addSingleUnderSewing(currentStitch, minStitchLength, minSatinLength, maxAngle, safetyDistance);
+            currentStitch = addSingleUnderSewing(currentStitch, minStitchLength, minSatinLength, maxAngle, safetyDistance, &addedStitches, &satinAreaLength);
+            satinAreaCount++;
+            stitchSum += addedStitches;
+            stitchSquareSum += addedStitches * addedStitches;
+            lengthSum += satinAreaLength;
+            lengthSquareSum += satinAreaLength * satinAreaLength;
         }
 
         currentStitch = currentStitch->next;
     }
+
+    printf("\nFound %d satin areas.\nMean length: %f +- %f\nMean added Stitches: %f +- %f\n", satinAreaCount, lengthSum / satinAreaCount, sqrt((lengthSquareSum - lengthSum * lengthSum / satinAreaCount)/satinAreaCount), stitchSum / satinAreaCount, sqrt((stitchSquareSum - stitchSum * stitchSum / satinAreaCount)/satinAreaCount));
 
 }
 
@@ -539,7 +553,7 @@ int main(int argc, const char* argv[])
 
     printf("\nAdding under sewing to satin areas\n");
     /* Paramters: Pattern, minStitchLength, minSatinLength, minSatinCount, maxAngle, safetyDistance */
-    addUnderSewing(p,      1.5,             1.0,            5,             20,        0.4);
+    addUnderSewing(p,      2,               1.0,            5,             30,        0.35);
 
     normalStitches2 = countNormalStitches(p->stitchList);
     printf("\nIn total %d stitches were added\n", normalStitches2-normalStitches1);
@@ -553,6 +567,7 @@ int main(int argc, const char* argv[])
 
     normalStitches3 = countNormalStitches(p->stitchList);
     printf("\nIn total %d stitches were removed (or added of the number is negative)\n", normalStitches1 - normalStitches3);
+    printf("\nFinal number of stitches: %d\n", normalStitches3);
 
     /*
     printf("\nAttempting to simplify straight lines\n");
