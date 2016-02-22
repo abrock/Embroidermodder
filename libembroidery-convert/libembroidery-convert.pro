@@ -31,7 +31,8 @@ INCLUDEPATH += \
 ../libcgeometry \
 $$PWD \
 
-SOURCES += libembroidery-convert-main.c
+SOURCES += \
+    libembroidery-convert-main.cpp
 
 include( ../libembroidery/libembroidery.pri )
 

@@ -8,6 +8,7 @@
 
 TEMPLATE = subdirs
 CONFIG += ordered
+CONFIG += qt debug
 
 ##########################
 # Linux/Unix             #
