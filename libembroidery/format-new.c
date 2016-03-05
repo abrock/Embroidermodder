@@ -32,7 +32,7 @@ int readNew(EmbPattern* pattern, const char* fileName)
     {
         int x = decodeNewStitch(data[0]);
         int y = decodeNewStitch(data[1]);
-        int flag = NORMAL;
+        int flag = EM_NORMAL;
         char val = data[2];
         if(data[2] & 0x40)
         {

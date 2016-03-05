@@ -40,7 +40,7 @@ int readZsk(EmbPattern* pattern, const char* fileName)
 
     while(embFile_read(b, 1, 3, file) == 3)
     {
-        stitchType = NORMAL;
+        stitchType = EM_NORMAL;
         if(b[0] & 0x4)
             b[2] = -b[2];
         if(b[0] & 0x8)

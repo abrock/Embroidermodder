@@ -58,7 +58,7 @@ int readXxx(EmbPattern* pattern, const char* fileName)
 
     for(i = 0; !endOfStream && embFile_tell(file) < paletteOffset; i++)
     {
-        flags = NORMAL;
+        flags = EM_NORMAL;
         if(thisStitchJump) flags = TRIM;
         thisStitchJump = 0;
         b0 = binaryReadByte(file);

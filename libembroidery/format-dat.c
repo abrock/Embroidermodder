@@ -33,7 +33,7 @@ int readDat(EmbPattern* pattern, const char* fileName)
         int b2 = (int)binaryReadUInt8(file);
         unsigned char b0 = binaryReadByte(file);
 
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
         stitchesRemaining--;
 
         if((b0 & 0x02) == 0) stitchType = TRIM;

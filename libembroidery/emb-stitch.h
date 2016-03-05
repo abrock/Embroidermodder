@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 /* Machine codes for stitch flags */
-#define NORMAL              0 /* stitch to (xx, yy) */
+#define EM_NORMAL              0 /* stitch to (xx, yy) */
 #define JUMP                1 /* move to(xx, yy) */
 #define TRIM                2 /* trim + move to(xx, yy) */
 #define STOP                4 /* pause machine for thread change */

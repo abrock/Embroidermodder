@@ -35,7 +35,7 @@ int readPlt(EmbPattern* pattern, const char* fileName)
             {
                 break;
             }
-            embPattern_addStitchAbs(pattern, x / scalingFactor, y / scalingFactor, NORMAL, 1);
+            embPattern_addStitchAbs(pattern, x / scalingFactor, y / scalingFactor, EM_NORMAL, 1);
         }
         else if(startsWith("PU", input))
         {

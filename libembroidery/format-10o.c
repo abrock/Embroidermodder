@@ -23,7 +23,7 @@ int read10o(EmbPattern* pattern, const char* fileName)
     while(1)
     {
         int x, y;
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
         unsigned char ctrl = (unsigned char)embFile_getc(file);
         if(embFile_eof(file))
             break;

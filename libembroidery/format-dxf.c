@@ -540,7 +540,7 @@ int readDxf(EmbPattern* pattern, const char* fileName)
                     else
                     {
                         /*if(firstStitch) embPattern_addStitchAbs(pattern, x, y, TRIM, 1); TODO: Add moveTo point to embPath pointList */
-                        /*else            embPattern_addStitchAbs(pattern, x, y, NORMAL, 1); TODO: Add lineTo point to embPath pointList */
+                        /*else            embPattern_addStitchAbs(pattern, x, y, EM_NORMAL, 1); TODO: Add lineTo point to embPath pointList */
                     }
                     prevX = x;
                     prevY = y;
@@ -567,7 +567,7 @@ int readDxf(EmbPattern* pattern, const char* fileName)
                     }
                     else
                     {
-                        /* embPattern_addStitchAbs(pattern, firstX, firstY, NORMAL, 1); TODO: Add lineTo point to embPath pointList */
+                        /* embPattern_addStitchAbs(pattern, firstX, firstY, EM_NORMAL, 1); TODO: Add lineTo point to embPath pointList */
                     }
                 }
             } /* end LWPOLYLINE */

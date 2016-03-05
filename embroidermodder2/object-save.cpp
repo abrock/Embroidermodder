@@ -248,7 +248,7 @@ void SaveObject::addPath(EmbPattern* pattern, QGraphicsItem* item)
             }
             else if(element.isLineTo())
             {
-                pattern.AddStitchAbs((element.x + startX), -(element.y + startY), NORMAL);
+                pattern.AddStitchAbs((element.x + startX), -(element.y + startY), EM_NORMAL);
             }
             else if(element.isCurveTo())
             {
@@ -257,7 +257,7 @@ void SaveObject::addPath(EmbPattern* pattern, QGraphicsItem* item)
                 P3 = path.elementAt(i+1); // control point
                 P4 = path.elementAt(i+2); // end point
 
-                pattern.AddStitchAbs(P4.x, -P4.y, NORMAL); //TODO: This is temporary
+                pattern.AddStitchAbs(P4.x, -P4.y, EM_NORMAL); //TODO: This is temporary
                 //TODO: Curved Polyline segments are always arcs
             }
         }

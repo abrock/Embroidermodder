@@ -23,7 +23,7 @@ int read100(EmbPattern* pattern, const char* fileName)
     embPattern_loadExternalColorFile(pattern, fileName);
     while(embFile_read(b, 1, 4, file) == 4)
     {
-        stitchType = NORMAL;
+        stitchType = EM_NORMAL;
         x = (b[2] > 0x80) ? -(b[2] - 0x80) : b[2];
         y = (b[3] > 0x80) ? -(b[3] - 0x80) : b[3];
         /*if(!(b[0] & 0xFC)) stitchType = JUMP; TODO: review & fix */

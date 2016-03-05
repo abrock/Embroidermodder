@@ -14,7 +14,7 @@ int readEmd(EmbPattern* pattern, const char* fileName)
 {
     unsigned char b0 = 0, b1 = 0;
     char dx = 0, dy = 0;
-    int flags = NORMAL;
+    int flags = EM_NORMAL;
     char endOfStream = 0;
     unsigned char jemd0[6]; /* TODO: more descriptive name */
     int width, height, colors;
@@ -42,7 +42,7 @@ int readEmd(EmbPattern* pattern, const char* fileName)
 
     for(i = 0; !endOfStream; i++)
     {
-            flags = NORMAL;
+            flags = EM_NORMAL;
             b0 = binaryReadUInt8(file);
             b1 = binaryReadUInt8(file);
 

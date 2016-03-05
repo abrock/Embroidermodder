@@ -34,7 +34,7 @@ int readDsb(EmbPattern* pattern, const char* fileName)
     {
         int x, y;
         unsigned char ctrl;
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
 
         ctrl =(unsigned char)embFile_getc(file);
         if(embFile_eof(file)) break;

@@ -50,7 +50,7 @@ int readSew(EmbPattern* pattern, const char* fileName)
         unsigned char b0 = binaryReadByte(file);
         unsigned char b1 = binaryReadByte(file);
 
-        flags = NORMAL;
+        flags = EM_NORMAL;
         if(thisStitchIsJump)
         {
             flags = TRIM;

@@ -8,7 +8,7 @@ static char* csvStitchFlagToStr(int flags)
 {
     switch(flags)
     {
-    case NORMAL:
+    case EM_NORMAL:
         return "STITCH";
         break;
     case JUMP:
@@ -37,7 +37,7 @@ static int csvStrToStitchFlag(const char* str)
         return -1;
     }
     if(!strcmp(str, "STITCH"))
-        return NORMAL;
+        return EM_NORMAL;
     else if(!strcmp(str, "JUMP"))
         return JUMP;
     else if(!strcmp(str, "TRIM"))

@@ -171,11 +171,11 @@ static void ofmReadExpanded(EmbFile* file, EmbPattern* p)
         binaryReadBytes(file, stitch, 5); /* TODO: check return value */
         if(stitch[0] == 0)
         {
-            embPattern_addStitchAbs(p, ofmDecode(stitch[1], stitch[2]) / 10.0, ofmDecode(stitch[3], stitch[4]) / 10.0, i == 0 ? JUMP : NORMAL, 1);
+            embPattern_addStitchAbs(p, ofmDecode(stitch[1], stitch[2]) / 10.0, ofmDecode(stitch[3], stitch[4]) / 10.0, i == 0 ? JUMP : EM_NORMAL, 1);
         }
         else if(stitch[0] == 32)
         {
-            embPattern_addStitchAbs(p, ofmDecode(stitch[1], stitch[2]) / 10.0, ofmDecode(stitch[3], stitch[4]) / 10.0, i == 0 ? TRIM : NORMAL, 1);
+            embPattern_addStitchAbs(p, ofmDecode(stitch[1], stitch[2]) / 10.0, ofmDecode(stitch[3], stitch[4]) / 10.0, i == 0 ? TRIM : EM_NORMAL, 1);
         }
     }
 }

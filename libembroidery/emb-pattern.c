@@ -71,7 +71,7 @@ void embPattern_hideStitchesOverLength(EmbPattern* p, int length)
         if((fabs(pointer->stitch.xx - prevX) > length) || (fabs(pointer->stitch.yy - prevY) > length))
         {
             pointer->stitch.flags |= TRIM;
-            pointer->stitch.flags &= ~NORMAL;
+            pointer->stitch.flags &= ~EM_NORMAL;
         }
         prevX = pointer->stitch.xx;
         prevY = pointer->stitch.yy;
@@ -223,7 +223,7 @@ void embPattern_copyPolylinesToStitchList(EmbPattern* p)
         embPattern_addStitchAbs(p, currentPointList->point.xx, currentPointList->point.yy, JUMP, 1);
         while(currentPointList)
         {
-            embPattern_addStitchAbs(p, currentPointList->point.xx, currentPointList->point.yy, NORMAL, 1);
+            embPattern_addStitchAbs(p, currentPointList->point.xx, currentPointList->point.yy, EM_NORMAL, 1);
             currentPointList = currentPointList->next;
         }
         firstObject = 0;

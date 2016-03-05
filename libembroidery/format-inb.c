@@ -65,7 +65,7 @@ int readInb(EmbPattern* pattern, const char* fileName)
     for(i = 0; i < stitchCount; i++)
     {
         unsigned char type;
-        int stitch = NORMAL;
+        int stitch = EM_NORMAL;
         x = binaryReadByte(file);
         y = binaryReadByte(file);
         type = binaryReadByte(file);

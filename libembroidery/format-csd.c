@@ -164,7 +164,7 @@ int readCsd(EmbPattern* pattern, const char* fileName)
         negativeY = ((b0 & 0x40) > 0);
         b0 = (unsigned char)(b0 & (0xFF ^ 0xE0));
 
-        if((b0 & 0x1F) == 0) flags = NORMAL;
+        if((b0 & 0x1F) == 0) flags = EM_NORMAL;
         else if((b0 & 0x0C) > 0)
         {
             flags = STOP;
@@ -176,7 +176,7 @@ int readCsd(EmbPattern* pattern, const char* fileName)
             colorChange += 1;
         }
         else if((b0 & 0x1F) > 0) flags = TRIM;
-        else flags = NORMAL;
+        else flags = EM_NORMAL;
         dx = (char) b2;
         dy = (char) b1;
         if(negativeX) dx = (char) -dx;

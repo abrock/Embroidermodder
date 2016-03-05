@@ -24,7 +24,7 @@ int readFxy(EmbPattern* pattern, const char* fileName)
 
     while(1)
     {
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
         int b1 = (int)binaryReadByte(file);
         int b2 = (int)binaryReadByte(file);
         unsigned char commandByte = binaryReadByte(file);

@@ -39,7 +39,7 @@ int readBro(EmbPattern* pattern, const char* fileName)
     while(1)
     {
         short b1, b2;
-        stitchType = NORMAL;
+        stitchType = EM_NORMAL;
         b1 = binaryReadByte(file);
         b2 = binaryReadByte(file);
         if(b1 == -128)

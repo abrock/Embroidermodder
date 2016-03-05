@@ -9,7 +9,7 @@ int readU00(EmbPattern* pattern, const char* fileName)
 {
     int i;
     char dx = 0, dy = 0;
-    int flags = NORMAL;
+    int flags = EM_NORMAL;
     char endOfStream = 0;
     EmbFile* file = 0;
 
@@ -49,7 +49,7 @@ int readU00(EmbPattern* pattern, const char* fileName)
         }
         if((b0 & 0x0F) == 0)
         {
-            flags = NORMAL;
+            flags = EM_NORMAL;
         }
         else if((b0 & 0x1f) == 1)
         {

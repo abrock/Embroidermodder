@@ -75,7 +75,7 @@ static unsigned char setbit(int pos)
         }
         else
         {
-            if(pointer->stitch.flags == NORMAL)
+            if(pointer->stitch.flags == EM_NORMAL)
             {
                 needleDown = 1;
                 jumpCount = 0;
@@ -431,7 +431,7 @@ int writeDst(EmbPattern* pattern, const char* fileName)
     co = embThreadList_count(pattern->threadList);
     st = 0;
     st = embStitchList_count(pattern->stitchList);
-    flags = NORMAL;
+    flags = EM_NORMAL;
     boundingRect = embPattern_calcBoundingBox(pattern);
     /* TODO: review the code below
     if(pattern->get_variable("design_name") != NULL)

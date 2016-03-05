@@ -121,7 +121,7 @@ int readJef(EmbPattern* pattern, const char* fileName)
     stitchCount = 0;
     while(stitchCount < numberOfStitchs + 100)
     {
-        int flags = NORMAL;
+        int flags = EM_NORMAL;
         unsigned char b0 = binaryReadByte(file);
         unsigned char b1 = binaryReadByte(file);
 

@@ -35,7 +35,7 @@ EmbStitch embStitchList_getAt(EmbStitchList* pointer, int num)
     return pointer->stitch;
 }
 
-/* TODO: Add a default parameter to handle returning count based on stitch flags. Currently, it includes JUMP and TRIM stitches, maybe we just want NORMAL stitches only or vice versa */
+/* TODO: Add a default parameter to handle returning count based on stitch flags. Currently, it includes JUMP and TRIM stitches, maybe we just want EM_NORMAL stitches only or vice versa */
 int embStitchList_count(EmbStitchList* pointer)
 {
     int i = 1;

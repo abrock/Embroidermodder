@@ -8,7 +8,7 @@
  *  Returns \c true if successful, otherwise returns \c false. */
 int readU01(EmbPattern* pattern, const char* fileName)
 {
-    int fileLength, negativeX = 0, negativeY = 0, flags = NORMAL;
+    int fileLength, negativeX = 0, negativeY = 0, flags = EM_NORMAL;
     char dx, dy;
     unsigned char data[3];
     EmbFile* file = 0;
@@ -29,7 +29,7 @@ int readU01(EmbPattern* pattern, const char* fileName)
         }
         if((data[0] & 0x0F) == 0)
         {
-            flags = NORMAL;
+            flags = EM_NORMAL;
         }
         else if((data[0] & 0x1f) == 1)
         {

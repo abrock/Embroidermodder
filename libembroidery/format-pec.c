@@ -18,7 +18,7 @@ void readPecStitches(EmbPattern* pattern, EmbFile* file)
         int val1 = (int)binaryReadUInt8(file);
         int val2 = (int)binaryReadUInt8(file);
 
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
         if(val1 == 0xFF && val2 == 0x00)
         {
             embPattern_addStitchRel(pattern, 0.0, 0.0, END, 1);

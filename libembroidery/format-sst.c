@@ -26,7 +26,7 @@ int readSst(EmbPattern* pattern, const char* fileName)
     embFile_seek(file, 0xA0, SEEK_SET); /* skip the all zero header */
     while(embFile_tell(file) < fileLength)
     {
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
 
         int b1 = (int) binaryReadByte(file);
         int b2 = (int) binaryReadByte(file);

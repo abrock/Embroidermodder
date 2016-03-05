@@ -25,7 +25,7 @@ int readDsz(EmbPattern* pattern, const char* fileName)
     {
         int x, y;
         unsigned char ctrl;
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
 
         y = embFile_getc(file);
         if(embFile_eof(file)) break;

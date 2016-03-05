@@ -95,7 +95,7 @@ int readShv(EmbPattern* pattern, const char* fileName)
         if(inJump)
             flags = JUMP;
         else
-            flags = NORMAL;
+            flags = EM_NORMAL;
 
         b0 = binaryReadUInt8(file);
         b1 = binaryReadUInt8(file);

@@ -17,7 +17,7 @@ static int vipDecodeStitchType(unsigned char b)
     switch (b)
     {
         case 0x80:
-            return NORMAL;
+            return EM_NORMAL;
         case 0x81:
             return TRIM;
         case 0x84:
@@ -25,7 +25,7 @@ static int vipDecodeStitchType(unsigned char b)
         case 0x90:
             return END;
         default:
-            return NORMAL;
+            return EM_NORMAL;
     }
 }
 
@@ -184,7 +184,7 @@ static unsigned char vipEncodeStitchType(int st)
 {
     switch(st)
     {
-        case NORMAL:
+        case EM_NORMAL:
             return (0x80);
         case JUMP:
         case TRIM:

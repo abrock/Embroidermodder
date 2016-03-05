@@ -63,7 +63,7 @@ int readExp(EmbPattern* pattern, const char* fileName)
 
     for(i = 0; !embFile_eof(file); i++)
     {
-        flags = NORMAL;
+        flags = EM_NORMAL;
         b0 = (unsigned char)embFile_getc(file);
         if(embFile_eof(file))
             break;
@@ -85,7 +85,7 @@ int readExp(EmbPattern* pattern, const char* fileName)
             else if((b1 == 2) || (b1 == 4) || b1 == 6)
             {
                 flags = TRIM;
-                if(b1 == 2) flags = NORMAL;
+                if(b1 == 2) flags = EM_NORMAL;
                 b0 = (unsigned char)embFile_getc(file);
                 if(embFile_eof(file))
                     break;

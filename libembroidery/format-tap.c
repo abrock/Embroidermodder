@@ -10,13 +10,13 @@ static int decodeRecordFlags(unsigned char b2)
     switch(b2 & 0xC3)
     {
         case 0x03:
-            return NORMAL;
+            return EM_NORMAL;
         case 0x83:
             return TRIM;
         case 0xC3:
             return STOP;
         default:
-            return NORMAL;
+            return EM_NORMAL;
     }
 }
 

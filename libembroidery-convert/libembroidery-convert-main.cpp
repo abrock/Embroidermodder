@@ -8,6 +8,9 @@
 #include <math.h>
 #include <iostream>
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+
 #define false 0
 #define true 1
 
@@ -171,7 +174,7 @@ void simplifyStraightLines(EmbPattern* p, const double maxErr, const double maxL
         && 0 != currentStitch->next->next->next->next->next->next
         ) {
         /* Count normal stitches separately */
-        if (NORMAL == currentStitch->stitch.flags) {
+        if (EM_NORMAL == currentStitch->stitch.flags) {
             normalStitchCounter++;
         }
         /* Re-name the four stitches beginning with the current stitch for clarity */
@@ -182,11 +185,11 @@ void simplifyStraightLines(EmbPattern* p, const double maxErr, const double maxL
 
         /* Check conditions under which we want to remove the middle stitch */
         if (
-               NORMAL == currentStitch->stitch.flags
-            && NORMAL == one->stitch.flags /* All three stitches need to be purely normal stitches, no trimming involved */
-            && NORMAL == two->stitch.flags
-            && NORMAL == three->stitch.flags
-            && NORMAL == four->stitch.flags
+               EM_NORMAL == currentStitch->stitch.flags
+            && EM_NORMAL == one->stitch.flags /* All three stitches need to be purely normal stitches, no trimming involved */
+            && EM_NORMAL == two->stitch.flags
+            && EM_NORMAL == three->stitch.flags
+            && EM_NORMAL == four->stitch.flags
             && distance(one, three) <= maxLength /* The distance between 1 and 3 must be smaller or equal the maximum stitch length we allow */
             && lineDeviation(one, three, two) <= maxErr /* The estimated maximum distance between the middle stitch and the line segment connecting the stitches 1 and three must be smaller or equal our maximum error threshold */
         ) {
@@ -228,7 +231,7 @@ double maxLength(struct EmbStitchList_ * p) {
     double max_length = 0;
     double currentLength = 0;
     while (currentStitch && currentStitch->next) {
-        if (NORMAL == currentStitch->stitch.flags && NORMAL == currentStitch->next->stitch.flags) {
+        if (EM_NORMAL == currentStitch->stitch.flags && EM_NORMAL == currentStitch->next->stitch.flags) {
             currentLength = distance(currentStitch, currentStitch->next);
             if (currentLength > max_length) {
                 max_length = currentLength;
@@ -249,7 +252,7 @@ int countNormalStitches(struct EmbStitchList_ * const start) {
     struct EmbStitchList_ * current = start;
     int counter = 0;
     while (0 != current) {
-        if (NORMAL == current->stitch.flags) {
+        if (EM_NORMAL == current->stitch.flags) {
             counter++;
         }
         current = current->next;
@@ -280,7 +283,7 @@ void removeSmallStitches(EmbPattern* p, const double threshold) {
         && 0 != currentStitch->next->next->next->next->next->next
    ) {
         /* Count normal stitches separately */
-        if (NORMAL == currentStitch->stitch.flags) {
+        if (EM_NORMAL == currentStitch->stitch.flags) {
             normalStitchCounter++;
         }
         /* Re-name the four stitches beginning with the current stitch for clarity */
@@ -291,12 +294,12 @@ void removeSmallStitches(EmbPattern* p, const double threshold) {
         five = four->next;
 
         if (
-               NORMAL == currentStitch->stitch.flags
-            && NORMAL == one->stitch.flags
-            && (JUMP == two->stitch.flags   || NORMAL == two->stitch.flags)
-            && (JUMP == three->stitch.flags || NORMAL == three->stitch.flags)
-            && NORMAL == four->stitch.flags
-            && NORMAL == five->stitch.flags
+               EM_NORMAL == currentStitch->stitch.flags
+            && EM_NORMAL == one->stitch.flags
+            && (JUMP == two->stitch.flags   || EM_NORMAL == two->stitch.flags)
+            && (JUMP == three->stitch.flags || EM_NORMAL == three->stitch.flags)
+            && EM_NORMAL == four->stitch.flags
+            && EM_NORMAL == five->stitch.flags
             && currentStitch->stitch.color == five->stitch.color
             && distance(two, three) < threshold) {
             /* We want to maximize the overall length of the embroidery so we don't loose detail at curves. */
@@ -353,7 +356,7 @@ int isSatinStitch(const struct EmbStitchList_* x, const double minSatinLength, c
         return false;
     }
 
-    if (NORMAL != x->stitch.flags || NORMAL != x->next->stitch.flags || NORMAL != x->next->next->stitch.flags) {
+    if (EM_NORMAL != x->stitch.flags || EM_NORMAL != x->next->stitch.flags || EM_NORMAL != x->next->next->stitch.flags) {
         return false;
     }
 
@@ -800,8 +803,8 @@ void removeNeedlessJumps(EmbPattern* p, const double maxLength) {
            && 0 != currentStitch->next
            && 0 != currentStitch->next->next
     ) {
-        if (    NORMAL == currentStitch->stitch.flags
-             && NORMAL == currentStitch->next->next->stitch.flags
+        if (    EM_NORMAL == currentStitch->stitch.flags
+             && EM_NORMAL == currentStitch->next->next->stitch.flags
              && JUMP   == currentStitch->next->stitch.flags
              && currentStitch->stitch.color == currentStitch->next->next->stitch.color
              && distance(currentStitch, currentStitch->next->next) <= maxLength

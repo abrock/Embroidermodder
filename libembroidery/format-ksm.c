@@ -36,7 +36,7 @@ static void ksmEncode(unsigned char* b, char dx, char dy, int flags)
  *  Returns \c true if successful, otherwise returns \c false. */
 int readKsm(EmbPattern* pattern, const char* fileName)
 {
-    int prevStitchType = NORMAL;
+    int prevStitchType = EM_NORMAL;
     char b[3];
     EmbFile* file = 0;
 
@@ -54,7 +54,7 @@ int readKsm(EmbPattern* pattern, const char* fileName)
 
     while(embFile_read(b, 1, 3, file) == 3)
     {
-        int flags = NORMAL;
+        int flags = EM_NORMAL;
 
         if(((prevStitchType & 0x08) == 0x08) && (b[2] & 0x08) == 0x08)
         {

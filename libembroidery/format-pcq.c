@@ -89,7 +89,7 @@ int readPcq(EmbPattern* pattern, const char* fileName)
     /* READ STITCH RECORDS */
     for(i = 0; i < st; i++)
     {
-        flags = NORMAL;
+        flags = EM_NORMAL;
         if(embFile_read(b, 1, 9, file) != 9)
             break;
 

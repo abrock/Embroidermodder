@@ -41,7 +41,7 @@ void EmbDetailsDialog::getInfo()
 
     //TODO: grab this information from the pattern
     stitchesTotal = 5; //TODO: embStitchList_count(pattern->stitchList, TOTAL);
-    stitchesReal  = 4; //TODO: embStitchList_count(pattern->stitchList, NORMAL);
+    stitchesReal  = 4; //TODO: embStitchList_count(pattern->stitchList, EM_NORMAL);
     stitchesJump  = 3; //TODO: embStitchList_count(pattern->stitchList, JUMP);
     stitchesTrim  = 2; //TODO: embStitchList_count(pattern->stitchList, TRIM);
     colorTotal    = 1; //TODO: embThreadList_count(pattern->threadList, TOTAL);
@@ -211,7 +211,7 @@ void MainWindow::designDetails()
         yy = embStitchList_getAt(pattern->stitchList, i).yy;
         length=sqrt(dx * dx + dy * dy);
         totalColorLength += length;
-        if(i > 0 && embStitchList_getAt(pattern->stitchList, i-1).flags != NORMAL)
+        if(i > 0 && embStitchList_getAt(pattern->stitchList, i-1).flags != EM_NORMAL)
             length = 0.0; //can't count first normal stitch;
         if(!(embStitchList_getAt(pattern->stitchList, i).flags & (JUMP | TRIM)))
         {
@@ -264,7 +264,7 @@ void MainWindow::designDetails()
         dy = embStitchList_getAt(pattern->stitchList, i).yy - yy;
         xx = embStitchList_getAt(pattern->stitchList, i).xx;
         yy = embStitchList_getAt(pattern->stitchList, i).yy;
-        if(i > 0 && embStitchList_getAt(pattern->stitchList, i-1).flags == NORMAL && embStitchList_getAt(pattern->stitchList, i).flags == NORMAL)
+        if(i > 0 && embStitchList_getAt(pattern->stitchList, i-1).flags == EM_NORMAL && embStitchList_getAt(pattern->stitchList, i).flags == EM_NORMAL)
         {
             length=sqrt(dx * dx + dy * dy);
             bin[int(floor(NUMBINS*length/max_stitchlength))]++;

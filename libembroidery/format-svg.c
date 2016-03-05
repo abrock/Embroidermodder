@@ -3606,7 +3606,7 @@ int writeSvg(EmbPattern* pattern, const char* fileName)
         char isNormal = 0;
         while(stList)
         {
-            if(stList->stitch.flags == NORMAL && !isNormal)
+            if(stList->stitch.flags == EM_NORMAL && !isNormal)
             {
                     isNormal = 1;
                     color = embThreadList_getAt(pattern->threadList, stList->stitch.color).color;
@@ -3618,11 +3618,11 @@ int writeSvg(EmbPattern* pattern, const char* fileName)
                                 emb_optOut(stList->stitch.xx, tmpX),
                                 emb_optOut(stList->stitch.yy, tmpY));
             }
-            else if(stList->stitch.flags == NORMAL && isNormal)
+            else if(stList->stitch.flags == EM_NORMAL && isNormal)
             {
                 embFile_printf(file, " %s,%s", emb_optOut(stList->stitch.xx, tmpX), emb_optOut(stList->stitch.yy, tmpY));
             }
-            else if(stList->stitch.flags != NORMAL && isNormal)
+            else if(stList->stitch.flags != EM_NORMAL && isNormal)
             {
                 isNormal = 0;
                 embFile_printf(file, "\"/>");

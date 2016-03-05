@@ -31,7 +31,7 @@ int readMit(EmbPattern* pattern, const char* fileName)
 
     while(binaryReadBytes(file, data, 2) == 2)
     {
-        embPattern_addStitchRel(pattern, mitDecodeStitch(data[0]) / 10.0, mitDecodeStitch(data[1]) / 10.0, NORMAL, 1);
+        embPattern_addStitchRel(pattern, mitDecodeStitch(data[0]) / 10.0, mitDecodeStitch(data[1]) / 10.0, EM_NORMAL, 1);
     }
 
     embFile_close(file);

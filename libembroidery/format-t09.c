@@ -23,7 +23,7 @@ int readT09(EmbPattern* pattern, const char* fileName)
 
     while(embFile_read(b, 1, 3, file) == 3)
     {
-        int stitchType = NORMAL;
+        int stitchType = EM_NORMAL;
         int b1 = b[0];
         int b2 = b[1];
         unsigned char commandByte = b[2];

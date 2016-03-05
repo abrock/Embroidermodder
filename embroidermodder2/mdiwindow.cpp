@@ -259,7 +259,7 @@ bool MdiWindow::loadFile(const QString &fileName)
                 curPolygonObjList = curPolygonObjList->next;
             }
         }
-        /* NOTE: Polylines should only contain NORMAL stitches. */
+        /* NOTE: Polylines should only contain EM_NORMAL stitches. */
         if(p->polylineObjList)
         {
             EmbPolylineObjectList* curPolylineObjList = p->polylineObjList;

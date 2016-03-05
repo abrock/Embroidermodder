@@ -94,7 +94,7 @@ int readThr(EmbPattern* pattern, const char* fileName)
     currentColor = -1;
     for(i = 0; i < header.numStiches; i++)
     {
-        int type = NORMAL;
+        int type = EM_NORMAL;
         float x = binaryReadFloat(file) / 10.0f;
         float y = binaryReadFloat(file) / 10.0f;
         unsigned int color = binaryReadUInt32(file);

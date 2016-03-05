@@ -223,7 +223,7 @@ int readStx(EmbPattern* pattern, const char* fileName)
         }
         else
         {
-            embPattern_addStitchRel(pattern, b0 / 10.0, b1 / 10.0, NORMAL, 1);
+            embPattern_addStitchRel(pattern, b0 / 10.0, b1 / 10.0, EM_NORMAL, 1);
             i++;
         }
     }

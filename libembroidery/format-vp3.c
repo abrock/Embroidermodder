@@ -232,7 +232,7 @@ int readVp3(EmbPattern* pattern, const char* fileName)
             }
             else
             {
-                embPattern_addStitchRel(pattern, x / 10.0, y / 10.0, NORMAL, 1);
+                embPattern_addStitchRel(pattern, x / 10.0, y / 10.0, EM_NORMAL, 1);
             }
 
             if(embFile_tell(file) == lastFilePosition)
