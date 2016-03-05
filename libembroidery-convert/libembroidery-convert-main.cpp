@@ -8,8 +8,7 @@
 #include <math.h>
 #include <iostream>
 
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
+#include "drawing.cpp"
 
 #define false 0
 #define true 1
@@ -230,14 +229,19 @@ double maxLength(struct EmbStitchList_ * p) {
     struct EmbStitchList_ * currentStitch = p;
     double max_length = 0;
     double currentLength = 0;
+    int counter = 0;
     while (currentStitch && currentStitch->next) {
-        if (EM_NORMAL == currentStitch->stitch.flags && EM_NORMAL == currentStitch->next->stitch.flags) {
+        if (EM_NORMAL == currentStitch->stitch.flags
+                && EM_NORMAL == currentStitch->next->stitch.flags
+                && currentStitch->stitch.color == currentStitch->next->stitch.color) {
             currentLength = distance(currentStitch, currentStitch->next);
             if (currentLength > max_length) {
                 max_length = currentLength;
+                std::cout << "New maximum length: " << max_length << " at stitch # " << counter << std::endl;
             }
         }
         currentStitch = currentStitch->next;
+        counter++;
     }
     return max_length;
 }
@@ -444,7 +448,7 @@ struct EmbStitchList_* clone(const struct EmbStitchList_* x) {
     return result;
 }
 
-struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance, const double minDensity, int * addedStitches, int * satinAreaLength) {
+struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance, const double minDensity, int * addedStitches, int * satinAreaLength, Drawing& underDraw) {
     const int color = start->stitch.color;
     struct EmbStitchList_* firstOpposing; 
     struct EmbStitchList_* lastAdjacent; 
@@ -482,12 +486,14 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
         calculateMean(newAdjacent, currentStitch, currentStitch->next->next);
         moveCloser(newOpposing, newAdjacent, safetyDistance);
         if (distance(newOpposing, prevOpposing) > minStitchLength) {
+            underDraw.draw(newOpposing, prevOpposing, distance(newOpposing, prevOpposing));
             prevOpposing->next = newOpposing;
             prevOpposing = newOpposing;
-            newOpposing = clone(newOpposing);   
+            newOpposing = clone(newOpposing);
             (*addedStitches)++;
         }
         if (distance(newAdjacent, prevAdjacent) > minStitchLength) {
+            underDraw.draw(newAdjacent, prevAdjacent, distance(newAdjacent, prevAdjacent));
             newAdjacent->next = prevAdjacent;
             prevAdjacent = newAdjacent;
             newAdjacent = clone(newAdjacent);
@@ -522,7 +528,7 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
         prevOpposing->next = prevAdjacent;
     }
            
-    printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
+    // printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
 
     return currentStitch;
 }
@@ -537,7 +543,7 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
  * @param maxAngle Maximum angle in degree between two stitches for the detection of satin stitches
  * @param safetyDistance The desired distance between the satin stitches and the under sewing lines.
  */
-void addUnderSewing(EmbPattern* p, const double minStitchLength, const double minSatinLength, const int minSatinCount, const double maxAngle, const double safetyDistance, const double minDensity) {
+void addUnderSewing(EmbPattern* p, const double minStitchLength, const double minSatinLength, const int minSatinCount, const double maxAngle, const double safetyDistance, const double minDensity, Drawing& underDraw) {
     struct EmbStitchList_ * currentStitch = p->stitchList;
     int addedStitches = 0;
     int satinAreaLength = 0;
@@ -551,7 +557,7 @@ void addUnderSewing(EmbPattern* p, const double minStitchLength, const double mi
 
     while (0 != currentStitch) {
         if (isSatinArea(currentStitch, minSatinLength, minSatinCount, maxAngle, minDensity)) {
-            currentStitch = addSingleUnderSewing(currentStitch, minStitchLength, minSatinLength, maxAngle, safetyDistance, minDensity, &addedStitches, &satinAreaLength);
+            currentStitch = addSingleUnderSewing(currentStitch, minStitchLength, minSatinLength, maxAngle, safetyDistance, minDensity, &addedStitches, &satinAreaLength, underDraw);
             satinAreaCount++;
             stitchSum += addedStitches;
             stitchSquareSum += addedStitches * addedStitches;
@@ -562,11 +568,11 @@ void addUnderSewing(EmbPattern* p, const double minStitchLength, const double mi
         currentStitch = currentStitch->next;
     }
 
-    printf("\nFound %d satin areas.\nMean length: %f +- %f\nMean added Stitches: %f +- %f\n", satinAreaCount, lengthSum / satinAreaCount, sqrt((lengthSquareSum - lengthSum * lengthSum / satinAreaCount)/satinAreaCount), stitchSum / satinAreaCount, sqrt((stitchSquareSum - stitchSum * stitchSum / satinAreaCount)/satinAreaCount));
+    // printf("\nFound %d satin areas.\nMean length: %f +- %f\nMean added Stitches: %f +- %f\n", satinAreaCount, lengthSum / satinAreaCount, sqrt((lengthSquareSum - lengthSum * lengthSum / satinAreaCount)/satinAreaCount), stitchSum / satinAreaCount, sqrt((stitchSquareSum - stitchSum * stitchSum / satinAreaCount)/satinAreaCount));
 
 }
 
-struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const start, const double minSatinLength, const double maxAngle, const double safetyDistance, const double minDensity, int * addedStitches, int * satinAreaLength) {
+struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const start, const double minSatinLength, const double maxAngle, const double safetyDistance, const double minDensity, int * addedStitches, int * satinAreaLength, Drawing& underDraw) {
     const int color = start->stitch.color;
     struct EmbStitchList_* firstOpposing; 
     struct EmbStitchList_* lastAdjacent; 
@@ -604,6 +610,8 @@ struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const 
         calculateMean(newAdjacent, currentStitch, currentStitch->next->next);
         moveCloser(newOpposing, newAdjacent, safetyDistance);
         if (leftOutCounter > 3 && leftOutCounter % 2 == 1) {
+            underDraw.draw(prevOpposing, newOpposing, distance(prevOpposing, newOpposing));
+            underDraw.draw(prevAdjacent, newAdjacent, distance(prevAdjacent, newAdjacent));
             prevOpposing->next = newOpposing;
             prevOpposing = newOpposing;
             newOpposing = clone(newOpposing);   
@@ -635,7 +643,7 @@ struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const 
     
     prevOpposing->next = prevAdjacent;
            
-    printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
+    // printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
 
     return currentStitch;
 }
@@ -650,7 +658,7 @@ struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const 
  * @param maxAngle Maximum angle in degree between two stitches for the detection of satin stitches
  * @param safetyDistance The desired distance between the satin stitches and the under sewing lines.
  */
-void addZigZagUnderSewing2(EmbPattern* p, const double minSatinLength, const int minSatinCount, const double maxAngle, const double safetyDistance, const double minDensity) {
+void addZigZagUnderSewing2(EmbPattern* p, const double minSatinLength, const int minSatinCount, const double maxAngle, const double safetyDistance, const double minDensity, Drawing& underDraw) {
     struct EmbStitchList_ * currentStitch = p->stitchList;
     int addedStitches = 0;
     int satinAreaLength = 0;
@@ -664,7 +672,7 @@ void addZigZagUnderSewing2(EmbPattern* p, const double minSatinLength, const int
 
     while (0 != currentStitch) {
         if (isSatinArea(currentStitch, minSatinLength, minSatinCount, maxAngle, minDensity)) {
-            currentStitch = addSingleZigZagUnderSewing2(currentStitch, minSatinLength, maxAngle, safetyDistance, minDensity, &addedStitches, &satinAreaLength);
+            currentStitch = addSingleZigZagUnderSewing2(currentStitch, minSatinLength, maxAngle, safetyDistance, minDensity, &addedStitches, &satinAreaLength, underDraw);
             satinAreaCount++;
             stitchSum += addedStitches;
             stitchSquareSum += addedStitches * addedStitches;
@@ -675,7 +683,7 @@ void addZigZagUnderSewing2(EmbPattern* p, const double minSatinLength, const int
         currentStitch = currentStitch->next;
     }
 
-    printf("\nFound %d satin areas.\nMean length: %f +- %f\nMean added Stitches: %f +- %f\n", satinAreaCount, lengthSum / satinAreaCount, sqrt((lengthSquareSum - lengthSum * lengthSum / satinAreaCount)/satinAreaCount), stitchSum / satinAreaCount, sqrt((stitchSquareSum - stitchSum * stitchSum / satinAreaCount)/satinAreaCount));
+    // printf("\nFound %d satin areas.\nMean length: %f +- %f\nMean added Stitches: %f +- %f\n", satinAreaCount, lengthSum / satinAreaCount, sqrt((lengthSquareSum - lengthSum * lengthSum / satinAreaCount)/satinAreaCount), stitchSum / satinAreaCount, sqrt((stitchSquareSum - stitchSum * stitchSum / satinAreaCount)/satinAreaCount));
 
 }
 
@@ -752,7 +760,7 @@ struct EmbStitchList_* addSingleZigZagUnderSewing(struct EmbStitchList_* const s
     start->next = firstOpposing;
     prevOpposing->next = prevAdjacent;
            
-    printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
+     // printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
 
     return currentStitch;
 }
@@ -792,7 +800,7 @@ void addZigZagUnderSewing(EmbPattern* p, const double minStitchLength, const dou
         currentStitch = currentStitch->next;
     }
 
-    printf("\nFound %d satin areas.\nMean length: %f +- %f\nMean added Stitches: %f +- %f\n", satinAreaCount, lengthSum / satinAreaCount, sqrt((lengthSquareSum - lengthSum * lengthSum / satinAreaCount)/satinAreaCount), stitchSum / satinAreaCount, sqrt((stitchSquareSum - stitchSum * stitchSum / satinAreaCount)/satinAreaCount));
+    // printf("\nFound %d satin areas.\nMean length: %f +- %f\nMean added Stitches: %f +- %f\n", satinAreaCount, lengthSum / satinAreaCount, sqrt((lengthSquareSum - lengthSum * lengthSum / satinAreaCount)/satinAreaCount), stitchSum / satinAreaCount, sqrt((stitchSquareSum - stitchSum * stitchSum / satinAreaCount)/satinAreaCount));
 
 }
 
@@ -853,7 +861,18 @@ int main(int argc, const char* argv[])
 #define SIMPLIFY          1
 #define REPEAT_SIMPLIFY   1
 #define REMOVE_NEEDLESS_JUMPS 0
+
+    Drawing myDraw;
+    myDraw.initializeImage(p);
+    myDraw.drawStitchLengthes(p);
+    myDraw.save(std::string(argv[1]));
+
     normalStitches1 = countNormalStitches(p->stitchList);
+    printf("\n Length of longest stitch: %f \n", maxLength(p->stitchList));
+
+    Drawing underDraw;
+    underDraw.lineWidth = 0.1;
+    underDraw.initializeImage(p);
 
 #if REMOVE_NEEDLESS_JUMPS
     removeNeedlessJumps(p, 1.0);
@@ -882,7 +901,7 @@ int main(int argc, const char* argv[])
 
     printf("\nAdding under sewing to satin areas\n");
     /* Paramters: Pattern, minStitchLength, minSatinLength, minSatinCount, maxAngle, safetyDistance, minDensity */
-    addUnderSewing(p,      2.0,               1.0,            5,             75,        0.35,           1.1);
+    addUnderSewing(p,      2.0,               1.0,            5,             75,        0.35,           1.1, underDraw);
 
     normalStitches2 = countNormalStitches(p->stitchList);
     printf("\nIn total %d stitches were added\n", normalStitches2-normalStitches1);
@@ -893,7 +912,7 @@ int main(int argc, const char* argv[])
 
     printf("\nAdding zigzag under sewing to satin areas\n");
     /* Paramters: Pattern, minSatinLength, minSatinCount, maxAngle, safetyDistance, minDensity */
-    addZigZagUnderSewing2(p,      1.9,            5,             75,        0.75,          1.1);
+    addZigZagUnderSewing2(p,      1.9,            5,             75,        0.75,          1.1, underDraw);
 
     normalStitches2 = countNormalStitches(p->stitchList);
     printf("\nIn total %d stitches were added\n", normalStitches2-normalStitches1);
@@ -927,6 +946,14 @@ int main(int argc, const char* argv[])
 #endif
 
     printf("\n Length of longest stitch: %f \n", maxLength(p->stitchList));
+
+    myDraw.initializeImage(p);
+    myDraw.lineWidth = 0.001;
+    myDraw.drawStitchLengthes(p);
+    underDraw.save(std::string(argv[1])+"-under");
+    myDraw.save(std::string(argv[1])+"-opt");
+
+    std::cout << "Endegelende" << std::endl;
 
     formatType = embFormat_typeFromName(argv[1]);
     if(formatType == EMBFORMAT_OBJECTONLY && argc == 3) /* TODO: fix this to work when writing multiple files */

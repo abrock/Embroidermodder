@@ -23,6 +23,20 @@ deploy {
 
 TARGET = libembroidery-convert
 
+LIBS += -L/usr/local/lib \
+-lopencv_core \
+-lopencv_imgproc \
+-lopencv_imgcodecs \
+-lopencv_highgui \
+-lopencv_ml \
+-lopencv_video \
+-lopencv_features2d \
+-lopencv_calib3d \
+-lopencv_objdetect \
+-lopencv_flann
+
+QMAKE_CXXFLAGS += -std=c++11
+
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
 
@@ -32,7 +46,8 @@ INCLUDEPATH += \
 $$PWD \
 
 SOURCES += \
-    libembroidery-convert-main.cpp
+    libembroidery-convert-main.cpp \
+    drawing.cpp
 
 include( ../libembroidery/libembroidery.pri )
 
