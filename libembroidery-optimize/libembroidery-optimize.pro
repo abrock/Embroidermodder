@@ -21,7 +21,21 @@ deploy {
     }
 }
 
-TARGET = libembroidery-convert
+TARGET = libembroidery-optimize
+
+LIBS += -L/usr/local/lib \
+-lopencv_core \
+-lopencv_imgproc \
+-lopencv_imgcodecs \
+-lopencv_highgui \
+-lopencv_ml \
+-lopencv_video \
+-lopencv_features2d \
+-lopencv_calib3d \
+-lopencv_objdetect \
+-lopencv_flann
+
+QMAKE_CXXFLAGS += -std=c++11
 
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
@@ -31,7 +45,9 @@ INCLUDEPATH += \
 ../libcgeometry \
 $$PWD \
 
-SOURCES += libembroidery-convert-main.c
+SOURCES += \
+    libembroidery-optimize-main.cpp \
+    drawing.cpp
 
 include( ../libembroidery/libembroidery.pri )
 
@@ -40,10 +56,10 @@ unix:!macx {
 QMAKE_STRIP    = echo                       #Suppress strip errors "File format not recognized"
 QMAKE_DEL_DIR += --ignore-fail-on-non-empty #Suppress rmdir errors "Directory not empty"
 
-convertbin.path  = "/usr/bin"
-convertbin.files = "libembroidery-convert"
-convertbin.extra = "strip libembroidery-convert; cp -f libembroidery-convert /usr/bin/libembroidery-convert" #ensure the binary gets stripped of debug symbols
+optimizebin.path  = "/usr/bin"
+optimizebin.files = "libembroidery-optimize"
+optimizebin.extra = "strip libembroidery-optimize; cp -f libembroidery-optimize /usr/bin/libembroidery-optimize" #ensure the binary gets stripped of debug symbols
 
-INSTALLS += convertbin \
+INSTALLS += optimizebin \
 
 }

@@ -60,7 +60,7 @@ void usage(void)
     printf("|        |       |       |                                                    |\n");
 
     formatList = embFormatList_create();
-    if(!formatList) { embLog_error("libembroidery-convert-main.c usage(), cannot allocate memory for formatList\n"); return; }
+    if(!formatList) { embLog_error("libembroidery-convert-main.c usage(), cannot allocate memory for formatList\n file: %s, line: %u\n", __FILE__, __LINE__); return; }
     curFormat = formatList;
     while(curFormat)
     {
@@ -843,16 +843,15 @@ int main(int argc, const char* argv[])
     }
 
     p = embPattern_create();
-    if(!p) { embLog_error("libembroidery-convert-main.c main(), cannot allocate memory for p\n"); exit(1); }
+    if(!p) { embLog_error("libembroidery-convert-main.c main(), cannot allocate memory for p\n file: %s, line: %u\n", __FILE__, __LINE__); exit(1); }
 
     successful = embPattern_read(p, argv[1]);
     if(!successful)
     {
-        embLog_error("libembroidery-convert-main.c main(), reading file %s was unsuccessful\n", argv[1]);
+        embLog_error("libembroidery-convert-main.c main(), reading file %s was unsuccessful\n file: %s, line: %u\n", argv[1], __FILE__, __LINE__);
         embPattern_free(p);
         exit(1);
     }
-
 
 #define UNDER_SEWING_ZIGZAG 0
 #define UNDER_SEWING_ZIGZAG2 1
@@ -968,7 +967,7 @@ int main(int argc, const char* argv[])
     {
         successful = embPattern_write(p, argv[i]);
         if(!successful)
-            embLog_error("libembroidery-convert-main.c main(), writing file %s was unsuccessful\n", argv[i]);
+            embLog_error("libembroidery-convert-main.c main(), writing file %s was unsuccessful\n file: %s, line: %u\n", argv[i], __FILE__, __LINE__);
     }
 
     embPattern_free(p);
@@ -984,19 +983,19 @@ int main(int argc, const char* argv[])
     }
 
     p = embPattern_create();
-    if(!p) { embLog_error("libembroidery-convert-main.c main(), cannot allocate memory for p\n"); exit(1); }
+    if(!p) { embLog_error("libembroidery-convert-main.c main(), cannot allocate memory for p %s\n file: %s, line: %u\n", __FILE__, __LINE__); exit(1); }
 
     successful = 0;
     reader = embReaderWriter_getByFileName(argv[1]);
     if(!reader)
     {
         successful = 0;
-        embLog_error("libembroidery-convert-main.c main(), unsupported read file type: %s\n", argv[1]);
+        embLog_error("libembroidery-convert-main.c main(), unsupported read file type: %s\n file: %s, line: %u\n", argv[1], __FILE__, __LINE__);
     }
     else
     {
         successful = reader->reader(p, argv[1]);
-        if(!successful) embLog_error("libembroidery-convert-main.c main(), reading file was unsuccessful: %s\n", argv[1]);
+        if(!successful) embLog_error("libembroidery-convert-main.c main(), reading file was unsuccessful: %s\n file: %s, line: %u\n", argv[1], __FILE__, __LINE__);
     }
     free(reader);
     if(!successful)
@@ -1019,13 +1018,13 @@ int main(int argc, const char* argv[])
         writer = embReaderWriter_getByFileName(argv[i]);
         if(!writer)
         {
-            embLog_error("libembroidery-convert-main.c main(), unsupported write file type: %s\n", argv[i]);
+            embLog_error("libembroidery-convert-main.c main(), unsupported write file type: %s\n file: %s, line: %u\n", argv[i], __FILE__, __LINE__);
         }
         else
         {
             successful = writer->writer(p, argv[i]);
             if(!successful)
-                embLog_error("libembroidery-convert-main.c main(), writing file %s was unsuccessful\n", argv[i]);
+                embLog_error("libembroidery-convert-main.c main(), writing file %s was unsuccessful\n file: %s, line: %u\n", argv[i], __FILE__, __LINE__);
         }
         free(writer);
     }

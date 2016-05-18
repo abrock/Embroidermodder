@@ -18,6 +18,7 @@ unix:!macx {
 SUBDIRS  = \
 ../../thumbnailer-kde4 \
 ../../libembroidery-convert \
+../../libembroidery-optimize \
 ../../embroidermodder2 \
 
 }

@@ -347,11 +347,11 @@ int embPattern_read(EmbPattern* pattern, const char* fileName) /* TODO: Write te
     EmbReaderWriter* reader = 0;
     int result = 0;
 
-    if(!pattern) { embLog_error("emb-pattern.c embPattern_read(), pattern argument is null\n"); return 0; }
-    if(!fileName) { embLog_error("emb-pattern.c embPattern_read(), fileName argument is null\n"); return 0; }
+    if(!pattern) { embLog_error("emb-pattern.c embPattern_read(), pattern argument is null\n file: %s, line: %u\n", __FILE__, __LINE__); return 0; }
+    if(!fileName) { embLog_error("emb-pattern.c embPattern_read(), fileName argument is null\n file: %s, line: %u\n", __FILE__, __LINE__); return 0; }
 
     reader = embReaderWriter_getByFileName(fileName);
-    if(!reader) { embLog_error("emb-pattern.c embPattern_read(), unsupported read file type: %s\n", fileName); return 0; }
+    if(!reader) { embLog_error("emb-pattern.c embPattern_read(), unsupported read file type: %s\n file: %s, line: %u\n", fileName, __FILE__, __LINE__); return 0; }
     result = reader->reader(pattern, fileName);
     free(reader);
     reader = 0;
