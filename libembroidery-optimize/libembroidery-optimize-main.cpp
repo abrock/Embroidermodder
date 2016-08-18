@@ -7,6 +7,7 @@
 #include <string.h>
 #include <math.h>
 #include <iostream>
+#include <tclap/CmdLine.h>
 
 #include "drawing.cpp"
 
@@ -300,8 +301,8 @@ void removeSmallStitches(EmbPattern* p, const double threshold) {
         if (
                EM_NORMAL == currentStitch->stitch.flags
             && EM_NORMAL == one->stitch.flags
-            && (JUMP == two->stitch.flags   || EM_NORMAL == two->stitch.flags)
-            && (JUMP == three->stitch.flags || EM_NORMAL == three->stitch.flags)
+            && EM_NORMAL == two->stitch.flags
+            && EM_NORMAL == three->stitch.flags
             && EM_NORMAL == four->stitch.flags
             && EM_NORMAL == five->stitch.flags
             && currentStitch->stitch.color == five->stitch.color
@@ -854,7 +855,7 @@ int main(int argc, const char* argv[])
     }
 
 #define UNDER_SEWING_ZIGZAG 0
-#define UNDER_SEWING_ZIGZAG2 1
+#define UNDER_SEWING_ZIGZAG2 0
 #define UNDER_SEWING      1
 #define SIMPLIFY_STRAIGHT 0
 #define SIMPLIFY          1
