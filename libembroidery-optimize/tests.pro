@@ -1,3 +1,4 @@
+
 TEMPLATE = app
 CONFIG -= debug_and_release qt
 CONFIG += console
@@ -21,7 +22,7 @@ deploy {
     }
 }
 
-TARGET = libembroidery-optimize
+TARGET = test-point-line-dist
 
 LIBS += -L/usr/local/lib \
 -lopencv_core \
@@ -35,7 +36,8 @@ LIBS += -L/usr/local/lib \
 -lopencv_objdetect \
 -lopencv_flann \
 -lgtest \
--lgtest_main
+-lgtest_main \
+-lpthread
 
 QMAKE_CXXFLAGS += -std=c++11
 
@@ -48,7 +50,7 @@ INCLUDEPATH += \
 $$PWD \
 
 SOURCES += \
-    libembroidery-optimize-main.cpp
+    test_point_line_dist_methods.cpp
 
 include( ../libembroidery/libembroidery.pri )
 
@@ -57,14 +59,10 @@ unix:!macx {
 QMAKE_STRIP    = echo                       #Suppress strip errors "File format not recognized"
 QMAKE_DEL_DIR += --ignore-fail-on-non-empty #Suppress rmdir errors "Directory not empty"
 
-optimizebin.path  = "/usr/bin"
-optimizebin.files = "libembroidery-optimize"
-optimizebin.extra = "strip libembroidery-optimize; cp -f libembroidery-optimize /usr/bin/libembroidery-optimize" #ensure the binary gets stripped of debug symbols
+#optimizebin.path  = "/usr/bin"
+#optimizebin.files = "test-point-line-dist"
+#optimizebin.extra = "strip test-point-line-dist; cp -f test-point-line-dist /usr/bin/test-point-line-dist" #ensure the binary gets stripped of debug symbols
 
 INSTALLS += optimizebin \
 
 }
-
-
-SUBDIRS += \
-    tests.pro

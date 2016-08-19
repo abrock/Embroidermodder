@@ -19,6 +19,7 @@ SUBDIRS  = \
 ../../thumbnailer-kde4 \
 ../../libembroidery-convert \
 ../../libembroidery-optimize \
+../../libembroidery-optimize/tests.pro \
 ../../embroidermodder2 \
 
 }

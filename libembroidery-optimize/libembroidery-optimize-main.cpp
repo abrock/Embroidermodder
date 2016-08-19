@@ -9,7 +9,11 @@
 #include <iostream>
 #include <tclap/CmdLine.h>
 
+#include <opencv2/core.hpp>
+
 #include "drawing.cpp"
+
+#include "point_line_dist.cpp"
 
 #define false 0
 #define true 1
@@ -126,9 +130,9 @@ double lineDeviation(const struct EmbStitchList_ * lineA, const struct EmbStitch
     const double line_dy = lineB->stitch.yy - lineA->stitch.yy;
     const double point_dx = pointC->stitch.xx - lineA->stitch.xx;
     const double point_dy = pointC->stitch.yy - lineA->stitch.yy;
-/**/
+    /**/
     /* Measure distance between (infinitely long) line and point*/
-/*
+    /*
     const double lineDistance = (point_dx * line_dy - point_dy * line_dx)/sqrt(line_dx*line_dx + line_dy*line_dy);
     */
 
@@ -166,13 +170,13 @@ void simplifyStraightLines(EmbPattern* p, const double maxErr, const double maxL
     struct EmbStitchList_ * four  = 0;
     while (
            0 != currentStitch
-        && 0 != currentStitch->next
-        && 0 != currentStitch->next->next
-        && 0 != currentStitch->next->next->next
-        && 0 != currentStitch->next->next->next->next
-        && 0 != currentStitch->next->next->next->next->next
-        && 0 != currentStitch->next->next->next->next->next->next
-        ) {
+           && 0 != currentStitch->next
+           && 0 != currentStitch->next->next
+           && 0 != currentStitch->next->next->next
+           && 0 != currentStitch->next->next->next->next
+           && 0 != currentStitch->next->next->next->next->next
+           && 0 != currentStitch->next->next->next->next->next->next
+           ) {
         /* Count normal stitches separately */
         if (EM_NORMAL == currentStitch->stitch.flags) {
             normalStitchCounter++;
@@ -185,14 +189,14 @@ void simplifyStraightLines(EmbPattern* p, const double maxErr, const double maxL
 
         /* Check conditions under which we want to remove the middle stitch */
         if (
-               EM_NORMAL == currentStitch->stitch.flags
-            && EM_NORMAL == one->stitch.flags /* All three stitches need to be purely normal stitches, no trimming involved */
-            && EM_NORMAL == two->stitch.flags
-            && EM_NORMAL == three->stitch.flags
-            && EM_NORMAL == four->stitch.flags
-            && distance(one, three) <= maxLength /* The distance between 1 and 3 must be smaller or equal the maximum stitch length we allow */
-            && lineDeviation(one, three, two) <= maxErr /* The estimated maximum distance between the middle stitch and the line segment connecting the stitches 1 and three must be smaller or equal our maximum error threshold */
-        ) {
+                EM_NORMAL == currentStitch->stitch.flags
+                && EM_NORMAL == one->stitch.flags /* All three stitches need to be purely normal stitches, no trimming involved */
+                && EM_NORMAL == two->stitch.flags
+                && EM_NORMAL == three->stitch.flags
+                && EM_NORMAL == four->stitch.flags
+                && distance(one, three) <= maxLength /* The distance between 1 and 3 must be smaller or equal the maximum stitch length we allow */
+                && lineDeviation(one, three, two) <= maxErr /* The estimated maximum distance between the middle stitch and the line segment connecting the stitches 1 and three must be smaller or equal our maximum error threshold */
+                ) {
             one->next = three;
             currentStitch = three;
             removedCounter++;
@@ -280,13 +284,13 @@ void removeSmallStitches(EmbPattern* p, const double threshold) {
     struct EmbStitchList_ * four  = 0;
     struct EmbStitchList_ * five  = 0;
     while (0 != currentStitch
-        && 0 != currentStitch->next
-        && 0 != currentStitch->next->next
-        && 0 != currentStitch->next->next->next
-        && 0 != currentStitch->next->next->next->next
-        && 0 != currentStitch->next->next->next->next->next
-        && 0 != currentStitch->next->next->next->next->next->next
-   ) {
+           && 0 != currentStitch->next
+           && 0 != currentStitch->next->next
+           && 0 != currentStitch->next->next->next
+           && 0 != currentStitch->next->next->next->next
+           && 0 != currentStitch->next->next->next->next->next
+           && 0 != currentStitch->next->next->next->next->next->next
+           ) {
         /* Count normal stitches separately */
         if (EM_NORMAL == currentStitch->stitch.flags) {
             normalStitchCounter++;
@@ -299,14 +303,14 @@ void removeSmallStitches(EmbPattern* p, const double threshold) {
         five = four->next;
 
         if (
-               EM_NORMAL == currentStitch->stitch.flags
-            && EM_NORMAL == one->stitch.flags
-            && EM_NORMAL == two->stitch.flags
-            && EM_NORMAL == three->stitch.flags
-            && EM_NORMAL == four->stitch.flags
-            && EM_NORMAL == five->stitch.flags
-            && currentStitch->stitch.color == five->stitch.color
-            && distance(two, three) < threshold) {
+                EM_NORMAL == currentStitch->stitch.flags
+                && EM_NORMAL == one->stitch.flags
+                && EM_NORMAL == two->stitch.flags
+                && EM_NORMAL == three->stitch.flags
+                && EM_NORMAL == four->stitch.flags
+                && EM_NORMAL == five->stitch.flags
+                && currentStitch->stitch.color == five->stitch.color
+                && distance(two, three) < threshold) {
             /* We want to maximize the overall length of the embroidery so we don't loose detail at curves. */
             
             if (distance(one, three) + distance(three, four) > distance(one, two) + distance(two, four)) {
@@ -451,13 +455,13 @@ struct EmbStitchList_* clone(const struct EmbStitchList_* x) {
 
 struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance, const double minDensity, int * addedStitches, int * satinAreaLength, Drawing& underDraw) {
     const int color = start->stitch.color;
-    struct EmbStitchList_* firstOpposing; 
-    struct EmbStitchList_* lastAdjacent; 
+    struct EmbStitchList_* firstOpposing;
+    struct EmbStitchList_* lastAdjacent;
     struct EmbStitchList_* prevOpposing;
     struct EmbStitchList_* prevAdjacent;
     struct EmbStitchList_* newOpposing;
     struct EmbStitchList_* newAdjacent;
-    struct EmbStitchList_* satinAreaBeginning = start->next; 
+    struct EmbStitchList_* satinAreaBeginning = start->next;
     struct EmbStitchList_* currentStitch = start;
     struct EmbStitchList_* tmpStitch;
     (*satinAreaLength) = 0;
@@ -481,23 +485,38 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
     
     newOpposing = clone(prevOpposing);
     newAdjacent = clone(prevAdjacent);
-
-    while (isSatinStitch(currentStitch, minSatinLength, maxAngle, minDensity) && color == currentStitch->stitch.color) {
+    // Curve of points between the last added stitch and the current potential stitch.
+    // This is used for detecting curves and reducing the stitch length accordingly
+    // to avoid the undersewing stitches showing.
+    std::vector<cv::Point2d> adjacentCurve, opposingCurve;
+    while (
+           isSatinStitch(currentStitch, minSatinLength, maxAngle, minDensity)
+           && color == currentStitch->stitch.color) {
         calculateMean(newOpposing, currentStitch->next, currentStitch->next->next->next);
         calculateMean(newAdjacent, currentStitch, currentStitch->next->next);
         moveCloser(newOpposing, newAdjacent, safetyDistance);
-        if (distance(newOpposing, prevOpposing) > minStitchLength) {
+        adjacentCurve.push_back(cv::Point2d(newAdjacent->stitch.xx, newAdjacent->stitch.yy));
+        opposingCurve.push_back(cv::Point2d(newOpposing->stitch.xx, newOpposing->stitch.yy));
+        if (distance(newOpposing, prevOpposing) > minStitchLength
+                || (max_nonlinearity(opposingCurve) > safetyDistance/3
+                    )) {
             underDraw.draw(newOpposing, prevOpposing, distance(newOpposing, prevOpposing));
             prevOpposing->next = newOpposing;
             prevOpposing = newOpposing;
             newOpposing = clone(newOpposing);
+            opposingCurve.clear();
+            opposingCurve.push_back(cv::Point2d(newOpposing->stitch.xx, newOpposing->stitch.yy));
             (*addedStitches)++;
         }
-        if (distance(newAdjacent, prevAdjacent) > minStitchLength) {
+        if (distance(newAdjacent, prevAdjacent) > minStitchLength
+                || (max_nonlinearity(adjacentCurve) > safetyDistance/3
+                    )) {
             underDraw.draw(newAdjacent, prevAdjacent, distance(newAdjacent, prevAdjacent));
             newAdjacent->next = prevAdjacent;
             prevAdjacent = newAdjacent;
             newAdjacent = clone(newAdjacent);
+            adjacentCurve.clear();
+            adjacentCurve.push_back(cv::Point2d(newAdjacent->stitch.xx, newAdjacent->stitch.yy));
             (*addedStitches)++;
         }
         calculateMean(newOpposing, currentStitch->next, currentStitch->next->next->next);
@@ -528,7 +547,7 @@ struct EmbStitchList_* addSingleUnderSewing(struct EmbStitchList_* const start, 
     else {
         prevOpposing->next = prevAdjacent;
     }
-           
+
     // printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
 
     return currentStitch;
@@ -575,13 +594,13 @@ void addUnderSewing(EmbPattern* p, const double minStitchLength, const double mi
 
 struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const start, const double minSatinLength, const double maxAngle, const double safetyDistance, const double minDensity, int * addedStitches, int * satinAreaLength, Drawing& underDraw) {
     const int color = start->stitch.color;
-    struct EmbStitchList_* firstOpposing; 
-    struct EmbStitchList_* lastAdjacent; 
+    struct EmbStitchList_* firstOpposing;
+    struct EmbStitchList_* lastAdjacent;
     struct EmbStitchList_* prevOpposing;
     struct EmbStitchList_* prevAdjacent;
     struct EmbStitchList_* newOpposing;
     struct EmbStitchList_* newAdjacent;
-    struct EmbStitchList_* satinAreaBeginning = start->next; 
+    struct EmbStitchList_* satinAreaBeginning = start->next;
     struct EmbStitchList_* currentStitch = start;
     int leftOutCounter = 0;
     (*satinAreaLength) = 0;
@@ -615,7 +634,7 @@ struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const 
             underDraw.draw(prevAdjacent, newAdjacent, distance(prevAdjacent, newAdjacent));
             prevOpposing->next = newOpposing;
             prevOpposing = newOpposing;
-            newOpposing = clone(newOpposing);   
+            newOpposing = clone(newOpposing);
             (*addedStitches)++;
             newAdjacent->next = prevAdjacent;
             prevAdjacent = newAdjacent;
@@ -643,7 +662,7 @@ struct EmbStitchList_* addSingleZigZagUnderSewing2(struct EmbStitchList_* const 
     start->next = firstOpposing;
     
     prevOpposing->next = prevAdjacent;
-           
+
     // printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
 
     return currentStitch;
@@ -690,13 +709,13 @@ void addZigZagUnderSewing2(EmbPattern* p, const double minSatinLength, const int
 
 struct EmbStitchList_* addSingleZigZagUnderSewing(struct EmbStitchList_* const start, const double minStitchLength, const double minSatinLength, const double maxAngle, const double safetyDistance, const double minDensity, int * addedStitches, int * satinAreaLength) {
     const int color = start->stitch.color;
-    struct EmbStitchList_* firstOpposing; 
-    struct EmbStitchList_* lastAdjacent; 
+    struct EmbStitchList_* firstOpposing;
+    struct EmbStitchList_* lastAdjacent;
     struct EmbStitchList_* prevOpposing;
     struct EmbStitchList_* prevAdjacent;
     struct EmbStitchList_* newOpposing;
     struct EmbStitchList_* newAdjacent;
-    struct EmbStitchList_* satinAreaBeginning = start->next; 
+    struct EmbStitchList_* satinAreaBeginning = start->next;
     struct EmbStitchList_* currentStitch = start;
     int leftoutcounter = 0;
     (*satinAreaLength) = 0;
@@ -730,7 +749,7 @@ struct EmbStitchList_* addSingleZigZagUnderSewing(struct EmbStitchList_* const s
         if (distance(newOpposing, prevOpposing) > minStitchLength) {
             prevOpposing->next = newOpposing;
             prevOpposing = newOpposing;
-            newOpposing = clone(newOpposing);   
+            newOpposing = clone(newOpposing);
             (*addedStitches)++;
         }
         // This makes the zigzag under sewing
@@ -760,8 +779,8 @@ struct EmbStitchList_* addSingleZigZagUnderSewing(struct EmbStitchList_* const s
     /* Finally stitch the beginning and end together */
     start->next = firstOpposing;
     prevOpposing->next = prevAdjacent;
-           
-     // printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
+
+    // printf("Found satin area of length %d, added %d stitches\n", *satinAreaLength, *addedStitches);
 
     return currentStitch;
 }
@@ -809,15 +828,15 @@ void removeNeedlessJumps(EmbPattern* p, const double maxLength) {
     struct EmbStitchList_ * currentStitch = p->stitchList;
     int removedCounter = 0;
     while (   0 != currentStitch
-           && 0 != currentStitch->next
-           && 0 != currentStitch->next->next
-    ) {
+              && 0 != currentStitch->next
+              && 0 != currentStitch->next->next
+              ) {
         if (    EM_NORMAL == currentStitch->stitch.flags
-             && EM_NORMAL == currentStitch->next->next->stitch.flags
-             && JUMP   == currentStitch->next->stitch.flags
-             && currentStitch->stitch.color == currentStitch->next->next->stitch.color
-             && distance(currentStitch, currentStitch->next->next) <= maxLength
-        ) {
+                && EM_NORMAL == currentStitch->next->next->stitch.flags
+                && JUMP   == currentStitch->next->stitch.flags
+                && currentStitch->stitch.color == currentStitch->next->next->stitch.color
+                && distance(currentStitch, currentStitch->next->next) <= maxLength
+                ) {
             currentStitch->next = currentStitch->next->next;
             removedCounter++;
         }
@@ -931,10 +950,10 @@ int main(int argc, const char* argv[])
 #if SIMPLIFY_STRAIGHT
     printf("\nAttempting to simplify straight lines\n");
     simplifyStraightLines(p, 0.1, 3.6),
-#endif
+        #endif
 
-#if REPEAT_SIMPLIFY 
-    printf("\nAttempting to remove very short stitches a second time\n");
+        #if REPEAT_SIMPLIFY
+            printf("\nAttempting to remove very short stitches a second time\n");
     removeSmallStitches(p, threshold);
     
     printf("\nAttempting to remove very short stitches a third time\n");
