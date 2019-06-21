@@ -874,12 +874,25 @@ int main(int argc, const char* argv[])
     }
 
 #define UNDER_SEWING_ZIGZAG 0
-#define UNDER_SEWING_ZIGZAG2 0
-#define UNDER_SEWING      1
+#define UNDER_SEWING_ZIGZAG2 1
+#define UNDER_SEWING      0
 #define SIMPLIFY_STRAIGHT 0
 #define SIMPLIFY          1
 #define REPEAT_SIMPLIFY   1
 #define REMOVE_NEEDLESS_JUMPS 0
+
+    {
+        Drawing jumpDraw;
+        jumpDraw.initializeImage(p);
+        jumpDraw.lineWidth = 0.002;
+        jumpDraw.drawStitchLengthes(p);
+        cv::Mat draw_jumps = jumpDraw.getGrey();
+
+        std::cout << "Drawing jumps" << std::endl;
+        jumpDraw.drawJumps(draw_jumps, p);
+        cv::imwrite(std::string(argv[1])+"-jump-pre.png", draw_jumps);
+    }
+
 
     Drawing myDraw;
     myDraw.initializeImage(p);
@@ -920,7 +933,7 @@ int main(int argc, const char* argv[])
 
     printf("\nAdding under sewing to satin areas\n");
     /* Paramters: Pattern, minStitchLength, minSatinLength, minSatinCount, maxAngle, safetyDistance, minDensity */
-    addUnderSewing(p,      2.0,               1.0,            5,             75,        0.35,           1.1, underDraw);
+    addUnderSewing(p,      2.0,               1.0,            5,             75,        0.45,           1.1, underDraw);
 
     normalStitches2 = countNormalStitches(p->stitchList);
     printf("\nIn total %d stitches were added\n", normalStitches2-normalStitches1);
@@ -931,7 +944,7 @@ int main(int argc, const char* argv[])
 
     printf("\nAdding zigzag under sewing to satin areas\n");
     /* Paramters: Pattern, minSatinLength, minSatinCount, maxAngle, safetyDistance, minDensity */
-    addZigZagUnderSewing2(p,      1.9,            5,             75,        0.75,          1.1, underDraw);
+    addZigZagUnderSewing2(p,      1.2,            5,             75,        0.25,          1.1, underDraw);
 
     normalStitches2 = countNormalStitches(p->stitchList);
     printf("\nIn total %d stitches were added\n", normalStitches2-normalStitches1);
@@ -971,6 +984,20 @@ int main(int argc, const char* argv[])
     myDraw.drawStitchLengthes(p);
     underDraw.save(std::string(argv[1])+"-under");
     myDraw.save(std::string(argv[1])+"-opt");
+
+    {
+        Drawing jumpDraw;
+        jumpDraw.initializeImage(p);
+        jumpDraw.lineWidth = 0.002;
+        jumpDraw.drawStitchLengthes(p);
+        cv::Mat draw_jumps = jumpDraw.getGrey();
+
+        std::cout << "Drawing jumps" << std::endl;
+        jumpDraw.drawJumps(draw_jumps, p);
+        cv::imwrite(std::string(argv[1])+"-jump.png", draw_jumps);
+
+        jumpDraw.analyzeJumps(p->stitchList);
+    }
 
     std::cout << "Endegelende" << std::endl;
 

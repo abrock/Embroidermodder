@@ -33,9 +33,7 @@ LIBS += -L/usr/local/lib \
 -lopencv_features2d \
 -lopencv_calib3d \
 -lopencv_objdetect \
--lopencv_flann \
--lgtest \
--lgtest_main
+-lopencv_flann
 
 QMAKE_CXXFLAGS += -std=c++11
 
@@ -45,6 +43,7 @@ MOC_DIR = .moc
 INCLUDEPATH += \
 ../libembroidery \
 ../libcgeometry \
+/usr/local/include/opencv4/\
 $$PWD \
 
 SOURCES += \

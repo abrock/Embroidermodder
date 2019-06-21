@@ -19,16 +19,20 @@ static unsigned char* vp3ReadString(EmbFile* file)
 
 static int vp3Decode(unsigned char inputByte)
 {
-    return (inputByte > 0x80) ? -((unsigned char) (~inputByte) + 1) : inputByte;
+    if(inputByte > 0x80)
+    {
+        return (int)-((unsigned char)((~inputByte) + 1));
+    }
+    return ((int)inputByte);
 }
 
-static short vp3DecodeInt16(short input)
+static short vp3DecodeInt16(unsigned short inputByte)
 {
-    if((unsigned short)input > 0x8000)
+    if(inputByte > 0x8000)
     {
-        return -((short) ((~input) + 1));
+        return -((short) ((~inputByte) + 1));
     }
-    return (input);
+    return ((short)inputByte);
 }
 
 typedef struct _vp3Hoop
@@ -65,7 +69,15 @@ static vp3Hoop vp3ReadHoopSection(EmbFile* file)
 {
     vp3Hoop hoop;
 
-    if(!file) { embLog_error("format-vp3.c vp3ReadHoopSection(), file argument is null\n"); return hoop; }
+    if(!file) 
+	{ 
+		embLog_error("format-vp3.c vp3ReadHoopSection(), file argument is null\n");
+		hoop.bottom = 0;
+		hoop.left = 0;
+		hoop.right = 0;
+		hoop.top = 0;
+		return hoop; 
+	}
 
     hoop.right = binaryReadInt32BE(file);
     hoop.bottom = binaryReadInt32BE(file);
@@ -186,7 +198,7 @@ int readVp3(EmbPattern* pattern, const char* fileName)
         colorSectionOffset += embFile_tell(file);
         startX = binaryReadInt32BE(file);
         startY = binaryReadInt32BE(file);
-        embPattern_addStitchAbs(pattern, startX / 1000, -startY / 1000, JUMP, 0);
+        embPattern_addStitchAbs(pattern, startX / 1000.0, -startY / 1000.0, JUMP, 1);
 
         tableSize = binaryReadByte(file);
         binaryReadByte(file);
@@ -221,8 +233,8 @@ int readVp3(EmbPattern* pattern, const char* fileName)
                     case 0x03:
                         break;
                     case 0x01:
-                        x = vp3DecodeInt16(binaryReadInt16BE(file));
-                        y = vp3DecodeInt16(binaryReadInt16BE(file));
+                        x = vp3DecodeInt16(binaryReadUInt16BE(file));
+                        y = vp3DecodeInt16(binaryReadUInt16BE(file));
                         binaryReadInt16BE(file);
                         embPattern_addStitchRel(pattern, x/ 10.0, y / 10.0, TRIM, 1);
                         break;
@@ -285,7 +297,7 @@ int writeVp3(EmbPattern* pattern, const char* fileName)
     int colorSectionStitchBytes;
     int first = 1;
     int numberOfColors = 0;
-    EmbColor color;
+	EmbColor color = embColor_make(0xFE, 0xFE, 0xFE);
     EmbStitchList *mainPointer = 0, *pointer = 0;
 
     if(!pattern) { embLog_error("format-vp3.c writeVp3(), pattern argument is null\n"); return 0; }
@@ -402,8 +414,10 @@ int writeVp3(EmbPattern* pattern, const char* fileName)
         EmbStitch s;
         int lastColor;
 
-        if(!first)
-            binaryWriteByte(file, 0);
+		if (!first)
+		{
+			binaryWriteByte(file, 0);
+		}
         binaryWriteByte(file, 0);
         binaryWriteByte(file, 5);
         binaryWriteByte(file, 0);
@@ -414,8 +428,10 @@ int writeVp3(EmbPattern* pattern, const char* fileName)
         pointer = mainPointer;
         color = embThreadList_getAt(pattern->threadList, pointer->stitch.color).color;
 
-        if(first && pointer->stitch.flags & JUMP && pointer->next->stitch.flags & JUMP)
-            pointer = pointer->next;
+		if (first && pointer->stitch.flags & JUMP && pointer->next->stitch.flags & JUMP)
+		{
+			pointer = pointer->next;
+		}
 
         s = pointer->stitch;
         embLog_print("format-vp3.c DEBUG %d, %lf, %lf\n", s.flags, s.xx, s.yy);
@@ -467,11 +483,14 @@ int writeVp3(EmbPattern* pattern, const char* fileName)
             int dx, dy;
 
             EmbStitch s = pointer->stitch;
-            if(s.color != lastColor)
-                break;
-            if(s.flags & END || s.flags & STOP)
-                break;
-
+			if (s.color != lastColor)
+			{
+				break;
+			}
+			if (s.flags & END || s.flags & STOP)
+			{
+				break;
+			}
             dx = (s.xx - lastX) * 10;
             dy = (s.yy - lastY) * 10;
             lastX = lastX + dx / 10.0; /* output is in ints, ensure rounding errors do not sum up */

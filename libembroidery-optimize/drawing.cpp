@@ -40,6 +40,16 @@ public:
         cv::imwrite(filename + "-jet.png", output);
     }
 
+    cv::Mat getGrey() {
+        cv::Mat output;
+        cv::normalize(img, output, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+
+        cv::Mat input[3] = {output, output, output};
+        cv::merge(input, 3, output);
+
+        return output;
+    }
+
     cv::Point2i getPos(const struct EmbStitchList_ * s) {
         return cv::Point2i (
                     std::round(scale * (s->stitch.xx-minX)),
@@ -61,12 +71,29 @@ public:
             cv::circle(img, getPos(b), std::round(radius*scale), cv::Scalar(intensity), -1);
             cv::circle(mask, getPos(b), std::round(radius*scale), 255, -1);
         }
-        cv::line(img, getPos(a), getPos(b), cv::Scalar(intensity), std::round(scale * lineWidth));
-        cv::line(mask, getPos(a), getPos(b), 255, std::round(scale * lineWidth));
+        const int thickness = std::max(1, (int)std::round(scale * lineWidth));
+        cv::line(img, getPos(a), getPos(b), cv::Scalar(intensity), thickness);
+        cv::line(mask, getPos(a), getPos(b), 255, thickness);
+    }
+
+    void drawColored(cv::Mat & inout, const struct EmbStitchList_ * a, const struct EmbStitchList_ * b, const cv::Scalar color) {
+        if (EM_NORMAL != a->stitch.flags && EM_NORMAL != b->stitch.flags) {
+            return;
+        }
+        // The circles for the two stitches are only drawn if the flag is "EM_NORMAL",
+        // thereby we avoid drawing circles for intermediate jumps, trims etc.
+        cv::circle(inout, getPos(a), std::round(radius*scale), color, -1);
+        cv::circle(inout, getPos(b), std::round(radius*scale), color, -1);
+        const int thickness = std::max(1, (int)std::round(scale * lineWidth));
+        cv::line(inout, getPos(a), getPos(b), color, thickness);
     }
 
     bool isNormal(const struct EmbStitchList_ * s) {
         return NULL != s && (EM_NORMAL == s->stitch.flags);
+    }
+
+    bool isJump(const struct EmbStitchList_ * s) {
+        return NULL != s && (JUMP == s->stitch.flags);
     }
 
     /**
@@ -108,6 +135,64 @@ public:
         }
     }
 
+    void drawJumps(cv::Mat &inout, EmbPattern* p, const struct EmbStitchList_ * stop = 0) {
+        drawJumps(inout, p->stitchList, stop);
+    }
+
+    void drawJumps(cv::Mat &inout, const struct EmbStitchList_ * start, const struct EmbStitchList_ * stop = 0) {
+        if (NULL == start || NULL == start->next) {
+            return;
+        }
+        struct EmbStitchList_ * currentStitch = start->next;
+        draw(start, start->next, distance(start, start->next));
+        for (;NULL != currentStitch
+             && NULL != currentStitch->next
+             && stop != currentStitch->next
+             && stop != currentStitch; currentStitch = currentStitch->next) {
+            struct EmbStitchList_ * nextStitch = currentStitch->next;
+            if (!isJump(currentStitch) && isJump(nextStitch)) {
+                drawColored(inout, currentStitch, nextStitch, jump_start_col);
+                continue;
+            }
+            if (isJump(currentStitch) && isJump(nextStitch)) {
+                drawColored(inout, currentStitch, nextStitch, jump_col);
+                continue;
+            }
+            if (isJump(currentStitch) && !isJump(nextStitch)) {
+                drawColored(inout, currentStitch, nextStitch, jump_stop_col);
+                continue;
+            }
+        }
+    }
+
+    void analyzeJumps(const struct EmbStitchList_ * start, const struct EmbStitchList_ * stop = 0) {
+        if (NULL == start || NULL == start->next) {
+            return;
+        }
+        std::cout << "Analyzing jumps:" << std::endl;
+        struct EmbStitchList_ * currentStitch = start->next;
+        draw(start, start->next, distance(start, start->next));
+        for (;NULL != currentStitch
+             && NULL != currentStitch->next
+             && stop != currentStitch->next
+             && stop != currentStitch; currentStitch = currentStitch->next) {
+            struct EmbStitchList_ * nextStitch = currentStitch->next;
+            if (!isJump(currentStitch) && isJump(nextStitch)) {
+                std::cout << "########### Start: ###########" << std::endl
+                          << distance(currentStitch, nextStitch) << std::endl;
+                continue;
+            }
+            if (isJump(currentStitch) && isJump(nextStitch)) {
+                std::cout << distance(currentStitch, nextStitch) << std::endl;
+                continue;
+            }
+            if (isJump(currentStitch) && !isJump(nextStitch)) {
+                std::cout << distance(currentStitch, nextStitch) << std::endl;
+                continue;
+            }
+        }
+    }
+
     void drawStitchLengthes(EmbPattern* p, const struct EmbStitchList_ * stop = 0) {
         drawStitchLengthes(p->stitchList, stop);
     }
@@ -145,6 +230,10 @@ public:
 
     cv::Mat_<float> img;
     cv::Mat_<uint8_t> mask;
+
+    cv::Scalar jump_start_col = cv::Scalar(255,255,0);
+    cv::Scalar jump_stop_col = cv::Scalar(0,0,255);
+    cv::Scalar jump_col = cv::Scalar(0,255,0);
 
 };
 
